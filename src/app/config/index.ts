@@ -30,6 +30,8 @@ const config = {
   jwt: {
     accessSecret: jwtAccessSecret ?? 'development-only-secret',
     accessExpiresIn: (process.env.JWT_ACCESS_EXPIRES_IN ?? '1d') as SignOptions['expiresIn'],
+    refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'development-refresh-secret',
+    refreshExpiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ?? '30d') as SignOptions['expiresIn'],
     resetSecret: process.env.JWT_RESET_SECRET ?? 'development-reset-secret',
     resetExpiresIn: (process.env.JWT_RESET_EXPIRES_IN ?? '15m') as SignOptions['expiresIn']
   },

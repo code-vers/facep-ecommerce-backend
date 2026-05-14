@@ -23,6 +23,14 @@ router.post('/register', authRateLimiter, validateRequest(AuthValidation.registe
 router.post('/login', authRateLimiter, validateRequest(AuthValidation.login), AuthController.login);
 
 router.post(
+  '/refresh-token',
+  validateRequest(AuthValidation.refreshToken),
+  AuthController.refreshToken
+);
+
+router.post('/logout', AuthController.logout);
+
+router.post(
   '/change-password',
   auth('USER', 'ADMIN'),
   validateRequest(AuthValidation.changePassword),

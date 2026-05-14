@@ -5,6 +5,7 @@ type RequestValidationTarget = {
   body: unknown;
   params: unknown;
   query: unknown;
+  cookies: unknown;
 };
 
 const validateRequest = (
@@ -15,11 +16,16 @@ const validateRequest = (
       const parsedData = await schema.parseAsync({
         body: req.body,
         params: req.params,
-        query: req.query
+        query: req.query,
+        cookies: req.cookies
       });
 
       if (Object.prototype.hasOwnProperty.call(parsedData, 'body')) {
         req.body = parsedData.body;
+      }
+      
+      if (Object.prototype.hasOwnProperty.call(parsedData, 'cookies')) {
+        req.cookies = parsedData.cookies;
       }
 
       next();

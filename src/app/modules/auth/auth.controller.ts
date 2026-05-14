@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'express';
 
 import AppError from '../../errors/AppError';
+import config from '../../config';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { AuthService } from './auth.service';
@@ -18,12 +19,47 @@ const register: RequestHandler = catchAsync(async (req, res) => {
 
 const login: RequestHandler = catchAsync(async (req, res) => {
   const result = await AuthService.login(req.body);
+  const { refreshToken, ...data } = result;
+
+  res.cookie('refreshToken', refreshToken, {
+    secure: config.nodeEnv === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  });
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: 'User logged in successfully.',
+    data: data
+  });
+});
+
+const refreshToken: RequestHandler = catchAsync(async (req, res) => {
+  const { refreshToken } = req.cookies;
+  const result = await AuthService.refreshToken(refreshToken);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Access token generated successfully.',
     data: result
+  });
+});
+
+const logout: RequestHandler = catchAsync(async (_req, res) => {
+  res.clearCookie('refreshToken', {
+    secure: config.nodeEnv === 'production',
+    httpOnly: true,
+    sameSite: 'strict'
+  });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Logged out successfully.',
+    data: null
   });
 });
 
@@ -80,6 +116,8 @@ const resetPassword: RequestHandler = catchAsync(async (req, res) => {
 export const AuthController = {
   register,
   login,
+  refreshToken,
+  logout,
   changePassword,
   forgotPassword,
   verifyResetCode,

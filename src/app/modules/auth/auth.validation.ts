@@ -77,11 +77,18 @@ const resetPassword = z.object({
     .strict()
 });
 
+const refreshToken = z.object({
+  cookies: z.object({
+    refreshToken: z.string({ message: 'Refresh token is required.' })
+  })
+});
+
 export const AuthValidation = {
   register,
   login,
   changePassword,
   forgotPassword,
   verifyResetCode,
-  resetPassword
+  resetPassword,
+  refreshToken
 };

@@ -21,7 +21,12 @@ export interface IUserResponse {
 
 export interface ILoginResponse {
   accessToken: string;
+  refreshToken: string;
   user: IUserResponse;
+}
+
+export interface IRefreshTokenResponse {
+  accessToken: string;
 }
 
 export interface IChangePasswordPayload {

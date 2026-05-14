@@ -10,6 +10,7 @@ import type {
   IChangePasswordPayload,
   IForgotPasswordPayload,
   ILoginResponse,
+  IRefreshTokenResponse,
   IResetPasswordPayload,
   IUserLoginPayload,
   IUserRegisterPayload,
@@ -89,9 +90,45 @@ const login = async (payload: IUserLoginPayload): Promise<ILoginResponse> => {
     expiresIn: config.jwt.accessExpiresIn
   });
 
+  const refreshToken = jwt.sign(authPayload, config.jwt.refreshSecret, {
+    expiresIn: config.jwt.refreshExpiresIn
+  });
+
   return {
     accessToken,
+    refreshToken,
     user: sanitizeUser(user)
+  };
+};
+
+const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
+  let decoded: any;
+  try {
+    decoded = jwt.verify(token, config.jwt.refreshSecret);
+  } catch (error) {
+    throw new AppError(401, 'Invalid or expired refresh token.');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId }
+  });
+
+  if (!user) {
+    throw new AppError(404, 'User does not exist.');
+  }
+
+  const authPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role
+  };
+
+  const accessToken = jwt.sign(authPayload, config.jwt.accessSecret, {
+    expiresIn: config.jwt.accessExpiresIn
+  });
+
+  return {
+    accessToken
   };
 };
 
@@ -235,6 +272,7 @@ const resetPassword = async (payload: IResetPasswordPayload): Promise<void> => {
 export const AuthService = {
   register,
   login,
+  refreshToken,
   changePassword,
   forgotPassword,
   verifyResetCode,
