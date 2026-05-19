@@ -1,4 +1,5 @@
 import AppError from '../../errors/AppError';
+import { QueryBuilder } from '../../utils/QueryBuilder';
 import prisma from '../../utils/prisma';
 import type { IChangeRolePayload } from './user.interface';
 
@@ -22,8 +23,15 @@ const getMe = async (userId: string) => {
   return user;
 };
 
-const getAllUsers = async () => {
+const getAllUsers = async (query: Record<string, unknown>) => {
+  const queryBuilder = new QueryBuilder(query)
+    .search(['name', 'email'])
+    .filter()
+    .sort()
+    .paginate();
+
   const users = await prisma.user.findMany({
+    ...queryBuilder.build(),
     select: {
       id: true,
       name: true,
@@ -34,7 +42,18 @@ const getAllUsers = async () => {
     }
   });
 
-  return users;
+  const total = await prisma.user.count({
+    where: queryBuilder.build().where
+  });
+
+  return {
+    meta: {
+      total,
+      page: Number(query.page) || 1,
+      limit: Number(query.limit) || 10
+    },
+    data: users
+  };
 };
 
 const changeRole = async (id: string, payload: IChangeRolePayload) => {
