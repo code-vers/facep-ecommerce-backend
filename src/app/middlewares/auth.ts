@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import AppError from '../errors/AppError';
 import type { IAuthUser, UserRole } from '../interfaces/auth.interface';
+import prisma from '../utils/prisma';
 
 const isAuthUser = (payload: unknown): payload is IAuthUser => {
   if (!payload || typeof payload !== 'object') {
@@ -21,7 +22,7 @@ const isAuthUser = (payload: unknown): payload is IAuthUser => {
 };
 
 const auth = (...requiredRoles: UserRole[]): RequestHandler => {
-  return (req, _res, next) => {
+  return async (req, _res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith('Bearer ')) {
@@ -39,6 +40,14 @@ const auth = (...requiredRoles: UserRole[]): RequestHandler => {
 
       if (requiredRoles.length > 0 && !requiredRoles.includes(decoded.role)) {
         return next(new AppError(403, 'You do not have permission to access this resource.'));
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId }
+      });
+
+      if (!user) {
+        return next(new AppError(401, 'User associated with this token no longer exists.'));
       }
 
       req.user = decoded;
