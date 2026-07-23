@@ -27,8 +27,8 @@ export const generateSwaggerDocs = () => {
     openapi: '3.0.0',
     info: {
       version: '1.0.0',
-      title: 'Backend API Boilerplate',
-      description: 'API Documentation for the backend boilerplate.'
+      title: 'Face-Commerce Backend API',
+      description: 'API Documentation for the Face-Commerce backend platform.'
     },
     servers: [{ url: '/' }]
   });
