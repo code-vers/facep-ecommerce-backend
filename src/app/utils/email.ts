@@ -6,7 +6,7 @@ import { logger } from './logger';
 const transporter = nodemailer.createTransport({
   host: config.smtp.host,
   port: config.smtp.port,
-  secure: config.smtp.port === 465, // true for 465, false for other ports
+  secure: config.smtp.port === 465,
   auth: {
     user: config.smtp.user,
     pass: config.smtp.pass
@@ -22,7 +22,7 @@ export const sendEmail = async (to: string, subject: string, html: string): Prom
       html
     });
     logger.info(`Message sent: ${info.messageId}`);
-    
+
     // Preview only available when sending through an Ethereal account
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) {
