@@ -1,10 +1,10 @@
 import type { UserRole } from '../../interfaces/auth.interface';
 
 export interface IUserRegisterPayload {
-  name: string;
+  fullName: string;
   email: string;
   password: string;
-  role?: 'USER';
+  role?: 'BUYER' | 'VENDOR';
 }
 
 export interface IUserLoginPayload {

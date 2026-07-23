@@ -32,7 +32,7 @@ router.post('/logout', AuthController.logout);
 
 router.post(
   '/change-password',
-  auth('USER', 'ADMIN'),
+  auth('BUYER', 'ADMIN'),
   validateRequest(AuthValidation.changePassword),
   AuthController.changePassword
 );

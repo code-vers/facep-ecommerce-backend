@@ -11,7 +11,7 @@ model User {
   name                 String
   email                String    @unique
   password             String
-  role                 Role      @default(USER)
+  role                 Role      @default(BUYER)
   passwordResetCode    String?
   passwordResetExpires DateTime?
   createdAt            DateTime  @default(now())
@@ -21,6 +21,7 @@ model User {
 }
 
 enum Role {
-  USER
+  BUYER
+  VENDOR
   ADMIN
 }
