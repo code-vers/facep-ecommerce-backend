@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Backend API for Face-Commerce using Node.js, Express, TypeScript, PostgreSQL, and Prisma.",
   "main": "dist/server.js",
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
@@ -19,7 +16,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:reset": "prisma migrate reset",
     "prisma:studio": "prisma studio",
-    "prisma:format": "prisma format"
+    "prisma:format": "prisma format",
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
