@@ -3,6 +3,9 @@ import { Router } from 'express';
 import { AuthRoutes } from '../modules/auth/auth.routes';
 import { UserRoutes } from '../modules/user/user.routes';
 
+import { CourierRoutes } from '../modules/courier/courier.route';
+import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
+
 const router = Router();
 
 const moduleRoutes = [
@@ -13,6 +16,14 @@ const moduleRoutes = [
   {
     path: '/users',
     route: UserRoutes
+  },
+  {
+    path: '/couriers',
+    route: CourierRoutes
+  },
+  {
+    path: '/shipping-zones',
+    route: ShippingZoneRoutes
   }
 ];
 

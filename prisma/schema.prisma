@@ -25,3 +25,30 @@ enum Role {
   VENDOR
   ADMIN
 }
+
+model Courier {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  rate         Decimal  @db.Decimal(10, 2)
+  deliveryTime String
+  shipments    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("couriers")
+}
+
+model ShippingZone {
+  id             String   @id @default(uuid())
+  zoneName       String   @unique
+  countries      String
+  baseRate       Decimal  @db.Decimal(10, 2)
+  perKgRate      Decimal  @db.Decimal(10, 2)
+  isFreeShipping Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("shipping_zones")
+}
