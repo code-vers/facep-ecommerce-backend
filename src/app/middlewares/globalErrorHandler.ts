@@ -50,7 +50,7 @@ const globalErrorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     errorSources = [
       {
         path: Array.isArray((err.meta as { target?: unknown })?.target)
-          ? ((err.meta as { target: string[] }).target.join('.'))
+          ? (err.meta as { target: string[] }).target.join('.')
           : '',
         message
       }

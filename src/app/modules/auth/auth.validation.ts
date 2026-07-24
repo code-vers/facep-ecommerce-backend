@@ -3,7 +3,9 @@ import { z } from 'zod';
 const register = z.object({
   body: z
     .object({
-      fullName: z.string({ message: 'Full name is required.' }).min(2, 'Name must be at least 2 characters long.'),
+      fullName: z
+        .string({ message: 'Full name is required.' })
+        .min(2, 'Name must be at least 2 characters long.'),
       email: z
         .string({ message: 'Email is required.' })
         .trim()
@@ -12,7 +14,10 @@ const register = z.object({
       password: z
         .string({ message: 'Password is required.' })
         .min(6, 'Password must be at least 6 characters long.'),
-      role: z.enum(['buyer', 'vendor', 'BUYER', 'VENDOR']).optional().transform(val => val ? val.toUpperCase() as 'BUYER' | 'VENDOR' : 'BUYER')
+      role: z
+        .enum(['buyer', 'vendor', 'BUYER', 'VENDOR'])
+        .optional()
+        .transform((val) => (val ? (val.toUpperCase() as 'BUYER' | 'VENDOR') : 'BUYER'))
     })
     .strict()
 });

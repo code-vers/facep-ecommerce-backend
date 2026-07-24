@@ -132,10 +132,7 @@ const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
   };
 };
 
-const changePassword = async (
-  userId: string,
-  payload: IChangePasswordPayload
-): Promise<void> => {
+const changePassword = async (userId: string, payload: IChangePasswordPayload): Promise<void> => {
   const user = await prisma.user.findUnique({
     where: { id: userId }
   });
@@ -170,7 +167,7 @@ const forgotPassword = async (payload: IForgotPasswordPayload): Promise<void> =>
 
   // Generate a random 6-digit code
   const resetCode = crypto.randomInt(100000, 999999).toString();
-  
+
   // Set expiration to 15 minutes from now
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -222,12 +219,10 @@ const verifyResetCode = async (
   // We use the current password hash as part of the secret so the token becomes invalid
   // immediately after the password is changed.
   const secret = config.jwt.resetSecret + user.password;
-  
-  const resetToken = jwt.sign(
-    { userId: user.id, email: user.email },
-    secret,
-    { expiresIn: config.jwt.resetExpiresIn }
-  );
+
+  const resetToken = jwt.sign({ userId: user.id, email: user.email }, secret, {
+    expiresIn: config.jwt.resetExpiresIn
+  });
 
   return { resetToken };
 };
