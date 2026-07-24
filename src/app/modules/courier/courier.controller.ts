@@ -15,13 +15,14 @@ const createCourier: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const getAllCouriers: RequestHandler = catchAsync(async (req, res) => {
-  const result = await CourierService.getAllCouriers();
+  const result = await CourierService.getAllCouriers(req.query);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: 'Couriers retrieved successfully!',
-    data: result
+    meta: result.meta,
+    data: result.data
   });
 });
 
