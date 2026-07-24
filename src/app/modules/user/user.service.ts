@@ -24,11 +24,7 @@ const getMe = async (userId: string) => {
 };
 
 const getAllUsers = async (query: Record<string, unknown>) => {
-  const queryBuilder = new QueryBuilder(query)
-    .search(['name', 'email'])
-    .filter()
-    .sort()
-    .paginate();
+  const queryBuilder = new QueryBuilder(query).search(['name', 'email']).filter().sort().paginate();
 
   const users = await prisma.user.findMany({
     ...queryBuilder.build(),

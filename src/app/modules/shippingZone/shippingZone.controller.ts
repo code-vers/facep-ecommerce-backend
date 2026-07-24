@@ -10,7 +10,7 @@ const createShippingZone: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 201,
     success: true,
     message: 'Shipping zone created successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -21,7 +21,7 @@ const getAllShippingZones: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'Shipping zones retrieved successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -33,7 +33,7 @@ const updateShippingZone: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'Shipping zone updated successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -45,7 +45,7 @@ const deleteShippingZone: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'Shipping zone deleted successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -53,5 +53,5 @@ export const ShippingZoneController = {
   createShippingZone,
   getAllShippingZones,
   updateShippingZone,
-  deleteShippingZone,
+  deleteShippingZone
 };

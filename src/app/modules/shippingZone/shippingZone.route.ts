@@ -7,11 +7,7 @@ import { Role } from '@prisma/client';
 
 const router = Router();
 
-router.get(
-  '/',
-  auth(Role.ADMIN),
-  ShippingZoneController.getAllShippingZones
-);
+router.get('/', auth(Role.ADMIN), ShippingZoneController.getAllShippingZones);
 
 router.post(
   '/',
@@ -27,10 +23,6 @@ router.patch(
   ShippingZoneController.updateShippingZone
 );
 
-router.delete(
-  '/:id',
-  auth(Role.ADMIN),
-  ShippingZoneController.deleteShippingZone
-);
+router.delete('/:id', auth(Role.ADMIN), ShippingZoneController.deleteShippingZone);
 
 export const ShippingZoneRoutes = router;
