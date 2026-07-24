@@ -3,7 +3,7 @@ import { Courier } from '@prisma/client';
 
 const createCourier = async (payload: Partial<Courier>) => {
   const result = await prisma.courier.create({
-    data: payload as Courier,
+    data: payload as Courier
   });
   return result;
 };
@@ -11,8 +11,8 @@ const createCourier = async (payload: Partial<Courier>) => {
 const getAllCouriers = async () => {
   const result = await prisma.courier.findMany({
     orderBy: {
-      createdAt: 'desc',
-    },
+      createdAt: 'desc'
+    }
   });
   return result;
 };
@@ -20,9 +20,9 @@ const getAllCouriers = async () => {
 const updateCourier = async (id: string, payload: Partial<Courier>) => {
   const result = await prisma.courier.update({
     where: {
-      id,
+      id
     },
-    data: payload,
+    data: payload
   });
   return result;
 };
@@ -30,8 +30,8 @@ const updateCourier = async (id: string, payload: Partial<Courier>) => {
 const deleteCourier = async (id: string) => {
   const result = await prisma.courier.delete({
     where: {
-      id,
-    },
+      id
+    }
   });
   return result;
 };
@@ -40,5 +40,5 @@ export const CourierService = {
   createCourier,
   getAllCouriers,
   updateCourier,
-  deleteCourier,
+  deleteCourier
 };

@@ -7,11 +7,7 @@ import { Role } from '@prisma/client';
 
 const router = Router();
 
-router.get(
-  '/',
-  auth(Role.ADMIN),
-  CourierController.getAllCouriers
-);
+router.get('/', auth(Role.ADMIN), CourierController.getAllCouriers);
 
 router.post(
   '/',
@@ -27,10 +23,6 @@ router.patch(
   CourierController.updateCourier
 );
 
-router.delete(
-  '/:id',
-  auth(Role.ADMIN),
-  CourierController.deleteCourier
-);
+router.delete('/:id', auth(Role.ADMIN), CourierController.deleteCourier);
 
 export const CourierRoutes = router;

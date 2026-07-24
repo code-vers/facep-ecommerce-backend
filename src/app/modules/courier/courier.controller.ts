@@ -10,7 +10,7 @@ const createCourier: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 201,
     success: true,
     message: 'Courier created successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -21,7 +21,7 @@ const getAllCouriers: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'Couriers retrieved successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -33,7 +33,7 @@ const updateCourier: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'Courier updated successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -45,7 +45,7 @@ const deleteCourier: RequestHandler = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'Courier deleted successfully!',
-    data: result,
+    data: result
   });
 });
 
@@ -53,5 +53,5 @@ export const CourierController = {
   createCourier,
   getAllCouriers,
   updateCourier,
-  deleteCourier,
+  deleteCourier
 };
