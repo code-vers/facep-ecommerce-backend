@@ -1,11 +1,34 @@
 import prisma from '../../utils/prisma';
 import { Inquiry } from '@prisma/client';
 import { QueryBuilder } from '../../utils/QueryBuilder';
+import { sendEmail } from '../../utils/email';
+import config from '../../config';
 
 const createInquiry = async (payload: Partial<Inquiry>) => {
   const result = await prisma.inquiry.create({
     data: payload as Inquiry
   });
+
+  const recipientEmail = config.smtp.user || config.admin.email;
+  if (recipientEmail) {
+    const subject = `New Support Inquiry from ${result.name}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #1a1a1a;">New Support Inquiry Received</h2>
+        <hr style="border: 1px solid #eee;" />
+        <p><strong>Name:</strong> ${result.name}</p>
+        <p><strong>Email:</strong> ${result.email}</p>
+        <p><strong>Contact Number:</strong> ${result.contactNumber || 'N/A'}</p>
+        <p><strong>Date & Time:</strong> ${new Date(result.createdAt).toLocaleString()}</p>
+        <p><strong>Message / Inquiry:</strong></p>
+        <blockquote style="background: #f9f9f9; padding: 15px; border-left: 4px solid #dec33a; margin: 10px 0;">
+          ${result.message}
+        </blockquote>
+      </div>
+    `;
+    void sendEmail(recipientEmail, subject, html);
+  }
+
   return result;
 };
 
