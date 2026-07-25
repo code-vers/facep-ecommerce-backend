@@ -53,6 +53,29 @@ model ShippingZone {
   @@map("shipping_zones")
 }
 
+model Category {
+  id            String        @id @default(uuid())
+  name          String        @unique
+  isActive      Boolean       @default(true)
+  subcategories Subcategory[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id         String   @id @default(uuid())
+  name       String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([name, categoryId])
+  @@map("subcategories")
+}
+ 
 enum InquiryStatus {
   PENDING
   REPLIED
