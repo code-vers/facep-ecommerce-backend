@@ -5,6 +5,7 @@ import { UserRoutes } from '../modules/user/user.routes';
 
 import { CourierRoutes } from '../modules/courier/courier.route';
 import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
+import { CategoryRoutes } from '../modules/category/category.route';
 
 const router = Router();
 
@@ -24,6 +25,10 @@ const moduleRoutes = [
   {
     path: '/shipping-zones',
     route: ShippingZoneRoutes
+  },
+  {
+    path: '/categories',
+    route: CategoryRoutes
   }
 ];
 
