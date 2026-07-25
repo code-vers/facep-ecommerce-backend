@@ -3,9 +3,10 @@ import { Router } from 'express';
 import { AuthRoutes } from '../modules/auth/auth.routes';
 import { UserRoutes } from '../modules/user/user.routes';
 
+import { CategoryRoutes } from '../modules/category/category.route';
 import { CourierRoutes } from '../modules/courier/courier.route';
-import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
 import { InquiryRoutes } from '../modules/inquiry/inquiry.route';
+import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
 
 const router = Router();
 
@@ -29,6 +30,10 @@ const moduleRoutes = [
   {
     path: '/inquiries',
     route: InquiryRoutes
+  },
+  {
+    path: '/categories',
+    route: CategoryRoutes
   }
 ];
 
