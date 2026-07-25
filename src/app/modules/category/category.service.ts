@@ -31,9 +31,7 @@ const getAllCategories = async (query: Record<string, unknown>) => {
   const result = await prisma.category.findMany({
     ...(prismaArgs as unknown as Prisma.CategoryFindManyArgs),
     include: {
-      _count: {
-        select: { subcategories: true }
-      }
+      subcategories: true
     }
   });
 
@@ -44,13 +42,21 @@ const getAllCategories = async (query: Record<string, unknown>) => {
   const limit = Number(query.limit) || 10;
   const totalPage = Math.ceil(total / limit);
 
-  type CategoryWithCount = Category & { _count: { subcategories: number } };
+  type CategoryWithSubs = Category & {
+    subcategories: {
+      id: string;
+      name: string;
+      categoryId: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }[];
+  };
 
   // Map to match frontend structure (mocking products, orders, sales for now)
-  const mappedData = result.map((cat: CategoryWithCount) => ({
+  const mappedData = result.map((cat: CategoryWithSubs) => ({
     id: cat.id,
     name: cat.name,
-    subcategories: cat._count.subcategories,
+    subcategories: cat.subcategories,
     products: 0,
     orders: 0,
     sales: '$ 0',
