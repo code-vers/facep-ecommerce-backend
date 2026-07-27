@@ -211,3 +211,23 @@ model ProductSpecification {
 
   @@map("product_specifications")
 }
+
+model Deal {
+  id                    String    @id @default(uuid())
+  title                 String
+  bannerHeading         String?
+  bannerSubheading      String?
+  bannerImage           String?
+  bannerBgColor         String?   @default("#ffca08")
+  categoryIds           String[]
+  discountStartPercent  Decimal?  @db.Decimal(5, 2)
+  discountEndPercent    Decimal?  @db.Decimal(5, 2)
+  startDate             DateTime?
+  endDate               DateTime?
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("deals")
+}
+
