@@ -3,7 +3,6 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 
 const uploadFiles = catchAsync(async (req: Request, res: Response) => {
-  // multer puts the array of files in req.files
   const files = req.files as Express.Multer.File[];
 
   if (!files || files.length === 0) {
@@ -15,9 +14,12 @@ const uploadFiles = catchAsync(async (req: Request, res: Response) => {
     });
   }
 
-  // Construct the local URLs (e.g., /uploads/products/filename.jpg)
-  // Assumes we will serve the /uploads folder statically in app.ts
-  const fileUrls = files.map((file) => `/uploads/products/${file.filename}`);
+  // Determine target folder for response URL
+  const folder = (req.query.folder as string) || (req.params as any)?.folder || 'products';
+  const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '') || 'products';
+
+  // Construct local static URLs (e.g., /uploads/deals/filename.jpg)
+  const fileUrls = files.map((file) => `/uploads/${safeFolder}/${file.filename}`);
 
   sendResponse(res, {
     statusCode: 200,

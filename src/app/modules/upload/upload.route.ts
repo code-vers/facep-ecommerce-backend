@@ -1,38 +1,70 @@
 import express, { type Request } from 'express';
+import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
 import { UploadController } from './upload.controller';
 
 const router = express.Router();
 
-// Setup Multer Storage for local product images
+// Base uploads directory
+const baseUploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(baseUploadsDir)) {
+  fs.mkdirSync(baseUploadsDir, { recursive: true });
+}
+
+// Setup Multer Storage for local images supporting dynamic target folders
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Save to backend's root uploads/products folder
-    cb(null, path.join(process.cwd(), 'uploads', 'products'));
+  destination: (req, _file, cb) => {
+    // Determine folder from query parameter (e.g. ?folder=deals) or route params
+    const folder = (req.query.folder as string) || (req.params as any)?.folder || 'products';
+    const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '') || 'products';
+    const targetDir = path.join(baseUploadsDir, safeFolder);
+
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    cb(null, targetDir);
   },
-  filename: (req, file, cb) => {
-    // Generate unique filename (timestamp + random string + original ext)
+  filename: (_req, file, cb) => {
+    let ext = path.extname(file.originalname || '').toLowerCase();
+
+    // Fallback: If ext is empty or '.blob', infer extension strictly from mimetype
+    if (!ext || ext === '' || ext === '.blob') {
+      const mime = (file.mimetype || '').toLowerCase();
+      if (mime.includes('jpeg') || mime.includes('jpg')) ext = '.jpg';
+      else if (mime.includes('png')) ext = '.png';
+      else if (mime.includes('webp')) ext = '.webp';
+      else if (mime.includes('gif')) ext = '.gif';
+      else ext = '.png';
+    }
+
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    cb(null, `${uniqueSuffix}${ext}`);
   }
 });
 
-// We can validate mime types to allow only images
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (file.mimetype.startsWith('image/')) {
+// Validate mime types to allow images
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  if (file.mimetype && file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Only images are allowed!'));
+    cb(new Error('Only image files are allowed!'));
   }
 };
 
 const upload = multer({ storage, fileFilter });
 
-// Endpoint accepts an array of files under the key 'files' (e.g. from FormData)
+// Endpoint accepts an array of files under key 'files' with optional ?folder=deals query
 router.post(
   '/',
-  upload.array('files', 10), // Max 10 images at once
+  upload.array('files', 10),
+  UploadController.uploadFiles
+);
+
+// Endpoint accepting folder as path parameter e.g. /api/v1/uploads/deals
+router.post(
+  '/:folder',
+  upload.array('files', 10),
   UploadController.uploadFiles
 );
 
