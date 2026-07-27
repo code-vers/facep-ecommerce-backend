@@ -6,6 +6,7 @@ import { UserRoutes } from '../modules/user/user.routes';
 import { CategoryRoutes } from '../modules/category/category.route';
 import { CourierRoutes } from '../modules/courier/courier.route';
 import { InquiryRoutes } from '../modules/inquiry/inquiry.route';
+import { ProductRoutes } from '../modules/product/product.route';
 import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
 
 const router = Router();
@@ -34,6 +35,10 @@ const moduleRoutes = [
   {
     path: '/categories',
     route: CategoryRoutes
+  },
+  {
+    path: '/products',
+    route: ProductRoutes
   }
 ];
 
