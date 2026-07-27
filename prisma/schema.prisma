@@ -33,6 +33,7 @@ model Courier {
   deliveryTime String
   shipments    Int      @default(0)
   isActive     Boolean  @default(true)
+  products     Product[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -47,6 +48,7 @@ model ShippingZone {
   perKgRate      Decimal  @db.Decimal(10, 2)
   isFreeShipping Boolean  @default(false)
   isActive       Boolean  @default(true)
+  products       Product[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -58,6 +60,7 @@ model Category {
   name          String        @unique
   isActive      Boolean       @default(true)
   subcategories Subcategory[]
+  products      Product[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -69,6 +72,7 @@ model Subcategory {
   name       String
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products   Product[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -92,4 +96,118 @@ model Inquiry {
   updatedAt     DateTime      @updatedAt
 
   @@map("inquiries")
+}
+
+enum Condition {
+  NEW
+  RENEWED
+  USED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum ShippingFeeType {
+  FREE
+  STANDARD
+  PREDEFINED
+}
+
+enum StockStatus {
+  AVAILABLE
+  OUT_OF_STOCK
+}
+
+model Product {
+  id                    String    @id @default(uuid())
+  sku                   String    @unique 
+  
+  brand                 String?
+  productType           String?
+  shortDescription      String?
+  categoryId            String
+  category              Category  @relation(fields: [categoryId], references: [id])
+  subcategoryId         String?
+  subcategory           Subcategory? @relation(fields: [subcategoryId], references: [id])
+  tags                  String[] 
+  condition             Condition @default(NEW)
+  availableColors       String[]  
+
+  thumbnail             String    
+  previewImages         String[]  
+  hasVariants           Boolean   @default(false)
+  variants              ProductVariant[]
+
+  basePrice             Decimal   @db.Decimal(10, 2)
+  oldPrice              Decimal?  @db.Decimal(10, 2)
+  discountType          DiscountType?
+  discountValue         Decimal?  @db.Decimal(10, 2)
+  dealBadgeText         String?
+  dealStartDate         DateTime?
+  dealEndDate           DateTime?
+  taxAmount             Decimal?  @db.Decimal(10, 2)
+  vatGst                Decimal?  @db.Decimal(10, 2)
+  importCharges         Decimal?  @db.Decimal(10, 2)
+  handlingFee           Decimal?  @db.Decimal(10, 2)
+
+  shipsFrom             String
+  minDeliveryDays       Int
+  maxDeliveryDays       Int
+  shippingFeeType       ShippingFeeType @default(FREE)
+  shippingCost          Decimal?  @db.Decimal(10, 2)    
+  shippingZoneId        String?   
+  shippingZone          ShippingZone? @relation(fields: [shippingZoneId], references: [id])
+  courierId             String?   
+  courier               Courier?  @relation(fields: [courierId], references: [id])
+  deliveryStandard      Boolean   @default(false)
+  deliveryCod           Boolean   @default(false)
+  deliveryExpress       Boolean   @default(false)
+  deliveryReturnPickup  Boolean   @default(false)
+
+  specifications        ProductSpecification[]
+  keyFeatures           String?   @db.Text
+  detailedDescription   String?   @db.Text
+  returnPolicy          String?
+  returnTerms           String?   @db.Text
+  
+  stockQuantity         Int
+  stockStatus           StockStatus @default(AVAILABLE)
+  lowStockAlertQuantity Int
+  minOrderQuantity      Int
+  maxOrderQuantity      Int
+  inventoryManagedBy    String?
+  warehouseLocation     String?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku         String   @unique
+  image       String?  
+  color       String?  
+  size        String?
+  material    String?
+  storage     String?
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int
+
+  @@map("product_variants")
+}
+
+model ProductSpecification {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name        String
+  value       String
+
+  @@map("product_specifications")
 }
