@@ -3,6 +3,7 @@ import cors, { type CorsOptions } from 'cors';
 import express, { type Application, type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import path from 'path';
 
 import config from './app/config';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
@@ -51,6 +52,10 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 app.use('/api/v1', router);
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 app.use(notFound);
 app.use(globalErrorHandler);
 

@@ -4,6 +4,7 @@ import { AuthRoutes } from '../modules/auth/auth.routes';
 import { UserRoutes } from '../modules/user/user.routes';
 
 import { CategoryRoutes } from '../modules/category/category.route';
+import { UploadRoutes } from '../modules/upload/upload.route';
 import { CourierRoutes } from '../modules/courier/courier.route';
 import { InquiryRoutes } from '../modules/inquiry/inquiry.route';
 import { ProductRoutes } from '../modules/product/product.route';
@@ -39,6 +40,10 @@ const moduleRoutes = [
   {
     path: '/products',
     route: ProductRoutes
+  },
+  {
+    path: '/uploads',
+    route: UploadRoutes
   }
 ];
 
