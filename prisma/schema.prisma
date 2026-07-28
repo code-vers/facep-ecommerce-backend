@@ -14,6 +14,7 @@ model User {
   role                 Role      @default(BUYER)
   passwordResetCode    String?
   passwordResetExpires DateTime?
+  products             Product[]
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -123,6 +124,8 @@ enum StockStatus {
 model Product {
   id                    String    @id @default(uuid())
   sku                   String    @unique 
+  vendorId              String?
+  vendor                User?     @relation(fields: [vendorId], references: [id])
   
   brand                 String?
   productType           String?

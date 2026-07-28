@@ -27,6 +27,15 @@ interface IProductPayload {
   [key: string]: unknown;
 }
 
+export interface IProductQueryParams {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  categoryId?: string;
+  vendorId?: string;
+  status?: string;
+}
+
 const createProduct = async (payload: IProductPayload): Promise<Product> => {
   const { variants, specifications, tags, availableColors, previewImages, ...productData } =
     payload;
@@ -93,20 +102,152 @@ const createProduct = async (payload: IProductPayload): Promise<Product> => {
   return result;
 };
 
-const getAllProducts = async () => {
-  const products = await prisma.product.findMany({
+const getAllProducts = async (query: IProductQueryParams = {}) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const whereConditions: Prisma.ProductWhereInput[] = [];
+
+  // Search Term Sanitization & Filter
+  if (
+    query.searchTerm &&
+    query.searchTerm !== 'undefined' &&
+    query.searchTerm !== 'null' &&
+    query.searchTerm.trim() !== ''
+  ) {
+    const term = query.searchTerm.trim();
+    whereConditions.push({
+      OR: [
+        { brand: { contains: term, mode: 'insensitive' } },
+        { shortDescription: { contains: term, mode: 'insensitive' } },
+        { sku: { contains: term, mode: 'insensitive' } },
+        { keyFeatures: { contains: term, mode: 'insensitive' } },
+        { productType: { contains: term, mode: 'insensitive' } },
+        { detailedDescription: { contains: term, mode: 'insensitive' } },
+        { category: { name: { contains: term, mode: 'insensitive' } } }
+      ]
+    });
+  }
+
+  // Category Filter
+  if (
+    query.categoryId &&
+    query.categoryId !== 'undefined' &&
+    query.categoryId !== 'null' &&
+    query.categoryId.trim() !== ''
+  ) {
+    whereConditions.push({ categoryId: query.categoryId.trim() });
+  }
+
+  // Vendor Filter
+  if (
+    query.vendorId &&
+    query.vendorId !== 'undefined' &&
+    query.vendorId !== 'null' &&
+    query.vendorId.trim() !== ''
+  ) {
+    whereConditions.push({
+      OR: [
+        { vendorId: query.vendorId.trim() },
+        { vendorId: null }
+      ]
+    });
+  }
+
+  // Status Filter
+  if (
+    query.status &&
+    query.status !== 'All' &&
+    query.status !== 'undefined' &&
+    query.status !== 'null' &&
+    query.status.trim() !== ''
+  ) {
+    const statusLower = query.status.toLowerCase();
+    if (statusLower === 'active' || statusLower === 'available') {
+      whereConditions.push({ stockStatus: 'AVAILABLE' });
+    } else if (statusLower === 'out of stock' || statusLower === 'out_of_stock') {
+      whereConditions.push({ stockStatus: 'OUT_OF_STOCK' });
+    }
+  }
+
+  const where: Prisma.ProductWhereInput =
+    whereConditions.length > 0 ? { AND: whereConditions } : {};
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        category: true,
+        subcategory: true,
+        vendor: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        variants: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    }),
+    prisma.product.count({ where })
+  ]);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit) || 1
+    },
+    data: products
+  };
+};
+
+const getProductById = async (id: string) => {
+  const product = await prisma.product.findUnique({
+    where: { id },
     include: {
       category: true,
-      variants: true
-    },
-    orderBy: {
-      createdAt: 'desc'
+      subcategory: true,
+      vendor: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      },
+      variants: true,
+      specifications: true
     }
   });
-  return products;
+
+  if (!product) {
+    throw new AppError(404, 'Product not found');
+  }
+
+  return product;
+};
+
+const deleteProduct = async (id: string) => {
+  const isExist = await prisma.product.findUnique({ where: { id } });
+
+  if (!isExist) {
+    throw new AppError(404, 'Product not found');
+  }
+
+  const result = await prisma.product.delete({ where: { id } });
+  return result;
 };
 
 export const ProductService = {
   createProduct,
-  getAllProducts
+  getAllProducts,
+  getProductById,
+  deleteProduct
 };
