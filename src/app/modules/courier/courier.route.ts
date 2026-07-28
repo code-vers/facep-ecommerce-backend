@@ -7,7 +7,7 @@ import { Role } from '@prisma/client';
 
 const router = Router();
 
-router.get('/', auth(Role.ADMIN), CourierController.getAllCouriers);
+router.get('/', auth(Role.ADMIN, Role.VENDOR), CourierController.getAllCouriers);
 
 router.post(
   '/',
