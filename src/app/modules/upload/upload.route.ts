@@ -2,6 +2,8 @@ import express, { type Request } from 'express';
 import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
+import { Role } from '@prisma/client';
+import auth from '../../middlewares/auth';
 import { UploadController } from './upload.controller';
 
 const router = express.Router();
@@ -44,19 +46,28 @@ const storage = multer.diskStorage({
 });
 
 // Validate mime types to allow images
+const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (file.mimetype && file.mimetype.startsWith('image/')) {
+  if (allowedMimeTypes.has(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new Error('Only image files are allowed!'));
   }
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 10
+  }
+});
 
 // Endpoint accepts an array of files under key 'files' with optional ?folder=deals query
 router.post(
   '/',
+  auth(Role.VENDOR, Role.ADMIN),
   upload.array('files', 10),
   UploadController.uploadFiles
 );
@@ -64,6 +75,7 @@ router.post(
 // Endpoint accepting folder as path parameter e.g. /api/v1/uploads/deals
 router.post(
   '/:folder',
+  auth(Role.VENDOR, Role.ADMIN),
   upload.array('files', 10),
   UploadController.uploadFiles
 );

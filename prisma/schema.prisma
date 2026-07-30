@@ -123,9 +123,13 @@ enum StockStatus {
 
 model Product {
   id                    String    @id @default(uuid())
-  sku                   String    @unique 
+  name                  String
+  slug                  String    @unique
+  sku                   String    @unique
   vendorId              String?
   vendor                User?     @relation(fields: [vendorId], references: [id])
+  isActive               Boolean   @default(true)
+  publishedAt            DateTime  @default(now())
   
   brand                 String?
   productType           String?
@@ -186,6 +190,12 @@ model Product {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@index([vendorId, createdAt])
+  @@index([isActive, createdAt])
+  @@index([categoryId, isActive])
+  @@index([subcategoryId, isActive])
+  @@index([basePrice])
+  @@index([stockStatus])
   @@map("products")
 }
 
@@ -233,4 +243,3 @@ model Deal {
 
   @@map("deals")
 }
-
