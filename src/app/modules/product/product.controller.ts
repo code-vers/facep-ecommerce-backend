@@ -65,6 +65,17 @@ const getVendorProducts: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const getAdminProducts: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.getAdminProducts(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Admin products retrieved successfully',
+    meta: result.meta,
+    data: result.data
+  });
+});
+
 const getVendorStats: RequestHandler = catchAsync(async (req, res) => {
   const result = await ProductService.getVendorStats(req.user!.userId);
   sendResponse(res, {
@@ -132,6 +143,7 @@ export const ProductController = {
   getPublicFacets,
   getPublicProductBySlug,
   getRelatedProducts,
+  getAdminProducts,
   getVendorProducts,
   getVendorStats,
   getVendorProductById,

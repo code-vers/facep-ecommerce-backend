@@ -146,22 +146,20 @@ const normalizePayload = (payload: ProductPayload): ProductPayload => ({
 });
 
 const relationSafeData = (payload: ProductPayload) => {
-  const {
-    variants: _variants,
-    specifications: _specifications,
-    vendorId: _vendorId,
-    slug: _slug,
-    vendor: _vendor,
-    category: _category,
-    subcategory: _subcategory,
-    shippingZone: _shippingZone,
-    courier: _courier,
-    id: _id,
-    createdAt: _createdAt,
-    updatedAt: _updatedAt,
-    publishedAt: _publishedAt,
-    ...data
-  } = payload;
+  const data = { ...payload };
+  delete data.variants;
+  delete data.specifications;
+  delete data.vendorId;
+  delete data.slug;
+  delete data.vendor;
+  delete data.category;
+  delete data.subcategory;
+  delete data.shippingZone;
+  delete data.courier;
+  delete data.id;
+  delete data.createdAt;
+  delete data.updatedAt;
+  delete data.publishedAt;
   return data;
 };
 
@@ -348,6 +346,49 @@ const getPublicFacets = async () => {
   };
 };
 
+const adminWhere = (query: Query): Prisma.ProductWhereInput => {
+  const conditions: Prisma.ProductWhereInput[] = [];
+  const search = String(query.search ?? query.searchTerm ?? '').trim();
+  if (search) {
+    conditions.push({
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+        { brand: { contains: search, mode: 'insensitive' } }
+      ]
+    });
+  }
+  if (query.categoryId) conditions.push({ categoryId: String(query.categoryId) });
+  if (query.status && query.status !== 'All') {
+    const status = String(query.status).toLowerCase();
+    if (status === 'active') conditions.push({ isActive: true });
+    else if (status === 'inactive') conditions.push({ isActive: false });
+    else if (status.includes('out')) conditions.push({ stockStatus: StockStatus.OUT_OF_STOCK });
+    else if (status.includes('available')) conditions.push({ stockStatus: StockStatus.AVAILABLE });
+  }
+  return conditions.length > 0 ? { AND: conditions } : {};
+};
+
+const getAdminProducts = async (query: Query = {}) => {
+  const page = parsePositiveInt(query.page, 1, 100000);
+  const limit = parsePositiveInt(query.limit, 10, 100);
+  const where = adminWhere(query);
+  const [data, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      include: productInclude,
+      orderBy: getOrderBy(query.sort)
+    }),
+    prisma.product.count({ where })
+  ]);
+  return {
+    data,
+    meta: { page, limit, total, totalPage: Math.max(1, Math.ceil(total / limit)) }
+  };
+};
+
 const vendorWhere = (vendorId: string, query: Query): Prisma.ProductWhereInput => {
   const conditions: Prisma.ProductWhereInput[] = [{ vendorId }];
   const search = String(query.search ?? query.searchTerm ?? '').trim();
@@ -464,6 +505,7 @@ export const ProductService = {
   getPublicFacets,
   getPublicProductBySlug,
   getRelatedProducts,
+  getAdminProducts,
   getVendorProducts,
   getVendorStats,
   getVendorProductById,
