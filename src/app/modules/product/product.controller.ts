@@ -77,7 +77,8 @@ const getAdminProducts: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const getVendorStats: RequestHandler = catchAsync(async (req, res) => {
-  const result = await ProductService.getVendorStats(req.user!.userId);
+  const isAdmin = req.user!.role === 'ADMIN';
+  const result = await ProductService.getVendorStats(isAdmin ? undefined : req.user!.userId);
   sendResponse(res, {
     statusCode: 200,
     success: true,

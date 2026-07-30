@@ -432,20 +432,28 @@ const getVendorProducts = async (vendorId: string, query: Query = {}) => {
   };
 };
 
-const getVendorStats = async (vendorId: string) => {
+const getVendorStats = async (vendorId?: string) => {
+  const where = vendorId ? { vendorId } : {};
   const [total, active, inactive, inStock, outOfStock, lowStock] = await Promise.all([
-    prisma.product.count({ where: { vendorId } }),
-    prisma.product.count({ where: { vendorId, isActive: true } }),
-    prisma.product.count({ where: { vendorId, isActive: false } }),
-    prisma.product.count({ where: { vendorId, stockStatus: StockStatus.AVAILABLE } }),
-    prisma.product.count({ where: { vendorId, stockStatus: StockStatus.OUT_OF_STOCK } }),
-    prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(*)::bigint AS count
-      FROM "products"
-      WHERE "vendorId" = ${vendorId}
-        AND "stockQuantity" > 0
-        AND "stockQuantity" <= "lowStockAlertQuantity"
-    `
+    prisma.product.count({ where }),
+    prisma.product.count({ where: { ...where, isActive: true } }),
+    prisma.product.count({ where: { ...where, isActive: false } }),
+    prisma.product.count({ where: { ...where, stockStatus: StockStatus.AVAILABLE } }),
+    prisma.product.count({ where: { ...where, stockStatus: StockStatus.OUT_OF_STOCK } }),
+    vendorId
+      ? prisma.$queryRaw<Array<{ count: bigint }>>`
+          SELECT COUNT(*)::bigint AS count
+          FROM "products"
+          WHERE "vendorId" = ${vendorId}
+            AND "stockQuantity" > 0
+            AND "stockQuantity" <= "lowStockAlertQuantity"
+        `
+      : prisma.$queryRaw<Array<{ count: bigint }>>`
+          SELECT COUNT(*)::bigint AS count
+          FROM "products"
+          WHERE "stockQuantity" > 0
+            AND "stockQuantity" <= "lowStockAlertQuantity"
+        `
   ]);
   return {
     total,
