@@ -32,6 +32,13 @@ router.patch(
   validateRequest(ProductValidation.updateStatusValidationSchema),
   ProductController.updateProductStatus
 );
+router.patch(
+  '/:id/promotion',
+  auth(Role.VENDOR),
+  validateRequest(ProductValidation.updateProductPromotionValidationSchema),
+  ProductController.updateProductPromotion
+);
+router.delete('/:id/promotion', auth(Role.VENDOR), ProductController.removeProductPromotion);
 router.delete('/:id', auth(Role.VENDOR), ProductController.deleteProduct);
 router.get('/:slug', ProductController.getPublicProductBySlug);
 router.get('/:slug/related', ProductController.getRelatedProducts);

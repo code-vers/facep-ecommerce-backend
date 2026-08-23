@@ -149,8 +149,40 @@ const createProductValidationSchema = z.object({ body: productBodySchema });
 const updateProductValidationSchema = z.object({ body: productBodySchema });
 const updateStatusValidationSchema = z.object({ body: z.object({ isActive: z.boolean() }) });
 
+const productPromotionBodySchema = z
+  .object({
+    discountType: z.nativeEnum(DiscountType),
+    discountValue: z.number().finite().positive('Discount must be greater than zero'),
+    dealBadgeText: optionalText(100),
+    dealStartDate: z.string().datetime().optional(),
+    dealEndDate: z.string().datetime().optional()
+  })
+  .superRefine((data, ctx) => {
+    if (data.discountType === DiscountType.PERCENTAGE && data.discountValue > 100) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['discountValue'],
+        message: 'Percentage discount cannot exceed 100'
+      });
+    }
+    if (
+      data.dealStartDate &&
+      data.dealEndDate &&
+      new Date(data.dealEndDate) <= new Date(data.dealStartDate)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['dealEndDate'],
+        message: 'Deal end date must be after start date'
+      });
+    }
+  });
+
+const updateProductPromotionValidationSchema = z.object({ body: productPromotionBodySchema });
+
 export const ProductValidation = {
   createProductValidationSchema,
   updateProductValidationSchema,
-  updateStatusValidationSchema
+  updateStatusValidationSchema,
+  updateProductPromotionValidationSchema
 };

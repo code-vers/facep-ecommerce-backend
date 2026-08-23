@@ -4,7 +4,7 @@ export interface ICreateDealInput {
   bannerSubheading?: string;
   bannerImage?: string;
   bannerBgColor?: string;
-  categoryIds?: string[];
+  categoryIds: string[];
   discountStartPercent?: number;
   discountEndPercent?: number;
   startDate?: string;

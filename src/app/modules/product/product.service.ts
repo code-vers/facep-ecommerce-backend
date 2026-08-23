@@ -502,6 +502,53 @@ const updateProductStatus = async (vendorId: string, id: string, isActive: boole
   return prisma.product.update({ where: { id }, data: { isActive }, include: productInclude });
 };
 
+type ProductPromotionPayload = {
+  discountType: 'PERCENTAGE' | 'FIXED';
+  discountValue: number;
+  dealBadgeText?: string;
+  dealStartDate?: string;
+  dealEndDate?: string;
+};
+
+const updateProductPromotion = async (
+  vendorId: string,
+  id: string,
+  payload: ProductPromotionPayload
+) => {
+  const product = await getVendorProductById(vendorId, id);
+  const basePrice = Number(product.basePrice);
+  if (payload.discountType === 'FIXED' && payload.discountValue > basePrice) {
+    throw new AppError(400, 'Fixed discount cannot exceed the product price');
+  }
+
+  return prisma.product.update({
+    where: { id },
+    data: {
+      discountType: payload.discountType,
+      discountValue: payload.discountValue,
+      dealBadgeText: payload.dealBadgeText?.trim() || null,
+      dealStartDate: payload.dealStartDate ? new Date(payload.dealStartDate) : null,
+      dealEndDate: payload.dealEndDate ? new Date(payload.dealEndDate) : null
+    },
+    include: productInclude
+  });
+};
+
+const removeProductPromotion = async (vendorId: string, id: string) => {
+  await getVendorProductById(vendorId, id);
+  return prisma.product.update({
+    where: { id },
+    data: {
+      discountType: null,
+      discountValue: null,
+      dealBadgeText: null,
+      dealStartDate: null,
+      dealEndDate: null
+    },
+    include: productInclude
+  });
+};
+
 const deleteProduct = async (vendorId: string, id: string) => {
   await getVendorProductById(vendorId, id);
   return prisma.product.delete({ where: { id } });
@@ -519,5 +566,7 @@ export const ProductService = {
   getVendorProductById,
   updateProduct,
   updateProductStatus,
+  updateProductPromotion,
+  removeProductPromotion,
   deleteProduct
 };

@@ -128,6 +128,30 @@ const updateProductStatus: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const updateProductPromotion: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.updateProductPromotion(
+    req.user!.userId,
+    req.params.id as string,
+    req.body
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Product promotion updated successfully',
+    data: result
+  });
+});
+
+const removeProductPromotion: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.removeProductPromotion(req.user!.userId, req.params.id as string);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Product promotion removed successfully',
+    data: result
+  });
+});
+
 const deleteProduct: RequestHandler = catchAsync(async (req, res) => {
   const result = await ProductService.deleteProduct(req.user!.userId, req.params.id as string);
   sendResponse(res, {
@@ -150,5 +174,7 @@ export const ProductController = {
   getVendorProductById,
   updateProduct,
   updateProductStatus,
+  updateProductPromotion,
+  removeProductPromotion,
   deleteProduct
 };
