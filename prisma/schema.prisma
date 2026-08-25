@@ -15,6 +15,7 @@ model User {
   passwordResetCode    String?
   passwordResetExpires DateTime?
   products             Product[]
+  deals                Deal[]    @relation("DealCreator")
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -232,6 +233,9 @@ model Deal {
   bannerSubheading      String?
   bannerImage           String?
   bannerBgColor         String?   @default("#ffca08")
+  createdById           String?   @map("user_id")
+  createdBy             User?     @relation("DealCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  addedBy               DealAddedBy? @map("added_by")
   categoryIds           String[]
   discountStartPercent  Decimal?  @db.Decimal(5, 2)
   discountEndPercent    Decimal?  @db.Decimal(5, 2)
@@ -242,4 +246,9 @@ model Deal {
   updatedAt             DateTime  @updatedAt
 
   @@map("deals")
+}
+
+enum DealAddedBy {
+  ADMIN
+  VENDOR
 }
