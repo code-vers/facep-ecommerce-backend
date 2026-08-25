@@ -1,16 +1,25 @@
--- Deals keep their category IDs directly. The service enforces the category
--- exclusivity rule using the deal creator and added_by fields.
+DROP TYPE IF EXISTS "DealAddedBy";
 CREATE TYPE "DealAddedBy" AS ENUM ('ADMIN', 'VENDOR');
 
-ALTER TABLE "deals"
-  ADD COLUMN "user_id" TEXT,
-  ADD COLUMN "added_by" "DealAddedBy";
+CREATE TABLE "deals" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "bannerHeading" TEXT,
+    "bannerSubheading" TEXT,
+    "bannerImage" TEXT,
+    "bannerBgColor" TEXT DEFAULT '#ffca08',
+    "user_id" TEXT,
+    "added_by" "DealAddedBy",
+    "categoryIds" TEXT[],
+    "discountStartPercent" DECIMAL(5,2),
+    "discountEndPercent" DECIMAL(5,2),
+    "startDate" TIMESTAMP(3),
+    "endDate" TIMESTAMP(3),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- Before this migration, only administrators could create deals. Preserve that
--- behaviour so existing categories remain unavailable to new admin deals.
-UPDATE "deals" SET "added_by" = 'ADMIN' WHERE "added_by" IS NULL;
+    CONSTRAINT "deals_pkey" PRIMARY KEY ("id")
+);
 
-ALTER TABLE "deals"
-  ADD CONSTRAINT "deals_user_id_fkey"
-  FOREIGN KEY ("user_id") REFERENCES "users"("id")
-  ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "deals" ADD CONSTRAINT "deals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
