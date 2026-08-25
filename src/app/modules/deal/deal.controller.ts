@@ -4,7 +4,7 @@ import sendResponse from '../../utils/sendResponse';
 import { DealService } from './deal.service';
 
 const createDeal: RequestHandler = catchAsync(async (req, res) => {
-  const result = await DealService.createDeal(req.body);
+  const result = await DealService.createDeal(req.user!, req.body);
 
   sendResponse(res, {
     statusCode: 201,
@@ -15,7 +15,7 @@ const createDeal: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const getAllDeals: RequestHandler = catchAsync(async (req, res) => {
-  const result = await DealService.getAllDeals(req.query);
+  const result = await DealService.getAllDeals(req.user!, req.query);
 
   sendResponse(res, {
     statusCode: 200,
@@ -39,7 +39,7 @@ const getActiveDeal: RequestHandler = catchAsync(async (_req, res) => {
 
 const getSingleDeal: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id as string;
-  const result = await DealService.getSingleDeal(id);
+  const result = await DealService.getSingleDeal(id, req.user!);
 
   sendResponse(res, {
     statusCode: 200,
@@ -51,7 +51,7 @@ const getSingleDeal: RequestHandler = catchAsync(async (req, res) => {
 
 const updateDeal: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id as string;
-  const result = await DealService.updateDeal(id, req.body);
+  const result = await DealService.updateDeal(id, req.user!, req.body);
 
   sendResponse(res, {
     statusCode: 200,
@@ -63,7 +63,7 @@ const updateDeal: RequestHandler = catchAsync(async (req, res) => {
 
 const deleteDeal: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id as string;
-  const result = await DealService.deleteDeal(id);
+  const result = await DealService.deleteDeal(id, req.user!);
 
   sendResponse(res, {
     statusCode: 200,
@@ -73,11 +73,24 @@ const deleteDeal: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const getUnavailableCategoryIds: RequestHandler = catchAsync(async (req, res) => {
+  const excludeDealId = typeof req.query.excludeDealId === 'string' ? req.query.excludeDealId : undefined;
+  const result = await DealService.getUnavailableCategoryIds(req.user!, excludeDealId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Unavailable deal categories retrieved successfully.',
+    data: result
+  });
+});
+
 export const DealController = {
   createDeal,
   getAllDeals,
   getActiveDeal,
   getSingleDeal,
+  getUnavailableCategoryIds,
   updateDeal,
   deleteDeal
 };
