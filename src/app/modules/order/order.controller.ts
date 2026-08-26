@@ -52,5 +52,51 @@ export const OrderController = {
       meta: result.meta,
       data: result.data
     });
+  }),
+
+  getVendorOrders: catchAsync(async (req: Request, res: Response) => {
+    const user = (req as Request & { user: { userId: string; role: string } }).user;
+    const vendorId = user.userId;
+    const role = user.role;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
+
+    const result = await OrderService.getVendorOrders(vendorId, role, {
+      page,
+      limit,
+      search,
+      status
+    });
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Vendor orders retrieved successfully',
+      meta: result.meta,
+      data: result.data
+    });
+  }),
+
+  updateOrderStatus: catchAsync(async (req: Request, res: Response) => {
+    const user = (req as Request & { user: { userId: string; role: string } }).user;
+    const vendorId = user.userId;
+    const role = user.role;
+    const orderId = req.params.orderId as string;
+    const { status } = req.body;
+
+    const result = await OrderService.updateOrderStatus(
+      orderId,
+      status,
+      role === 'ADMIN' ? 'ADMIN_BYPASS' : vendorId
+    );
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Order status updated successfully',
+      data: result
+    });
   })
 };

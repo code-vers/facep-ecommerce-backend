@@ -10,4 +10,12 @@ router.post('/create-session', OrderController.createCheckoutSession);
 // Fetch logged in user orders
 router.get('/my-orders', auth('BUYER', 'ADMIN', 'VENDOR'), OrderController.getMyOrders);
 
+// Vendor routes
+router.get('/vendor-orders', auth('VENDOR', 'ADMIN'), OrderController.getVendorOrders);
+router.patch(
+  '/vendor-orders/:orderId/status',
+  auth('VENDOR', 'ADMIN'),
+  OrderController.updateOrderStatus
+);
+
 export const OrderRoutes = router;

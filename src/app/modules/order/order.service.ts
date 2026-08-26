@@ -215,5 +215,90 @@ export const OrderService = {
       },
       data: orders
     };
+  },
+
+  async getVendorOrders(
+    userId: string,
+    role: string,
+    options: { page?: number; limit?: number; search?: string; status?: string }
+  ) {
+    const page = options.page || 1;
+    const limit = options.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    let productIds: string[] = [];
+
+    if (role !== 'ADMIN') {
+      const products = await prisma.product.findMany({
+        where: { vendorId: userId },
+        select: { id: true }
+      });
+      productIds = products.map((p) => p.id);
+      where.items = { some: { productId: { in: productIds } } };
+    }
+
+    if (options.status && options.status !== 'All Orders') {
+      const statusMap: Record<string, string[]> = {
+        Ordered: ['PENDING_PAYMENT', 'PAID'],
+        Packed: ['PROCESSING'],
+        Shipped: ['SHIPPED'],
+        Delivered: ['DELIVERED'],
+        Returned: ['CANCELLED']
+      };
+      const mappedStatuses = statusMap[options.status];
+      if (mappedStatuses) {
+        where.status = { in: mappedStatuses };
+      }
+    }
+
+    if (options.search) {
+      where.OR = [
+        { orderNumber: { contains: options.search, mode: 'insensitive' } },
+        { items: { some: { productName: { contains: options.search, mode: 'insensitive' } } } }
+      ];
+    }
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.order.count({ where })
+    ]);
+
+    const filteredOrders =
+      role === 'ADMIN'
+        ? orders
+        : orders.map((order) => ({
+            ...order,
+            items: order.items.filter((item) => productIds.includes(item.productId))
+          }));
+
+    return {
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      data: filteredOrders
+    };
+  },
+
+  async updateOrderStatus(orderId: string, status: string, vendorId: string) {
+    if (vendorId !== 'ADMIN_BYPASS') {
+      const products = await prisma.product.findMany({ where: { vendorId }, select: { id: true } });
+      const productIds = products.map((p) => p.id);
+      const order = await prisma.order.findFirst({
+        where: { id: orderId, items: { some: { productId: { in: productIds } } } }
+      });
+      if (!order) {
+        throw new Error('Order not found or unauthorized');
+      }
+    }
+
+    return await prisma.order.update({
+      where: { id: orderId },
+      data: { status: status as any }
+    });
   }
 };
