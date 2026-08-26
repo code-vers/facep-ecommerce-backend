@@ -10,6 +10,7 @@ import { InquiryRoutes } from '../modules/inquiry/inquiry.route';
 import { ProductRoutes } from '../modules/product/product.route';
 import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
 import { DealRoutes } from '../modules/deal/deal.route';
+import { OrderRoutes } from '../modules/order/order.route';
 
 const router = Router();
 
@@ -45,6 +46,10 @@ const moduleRoutes = [
   {
     path: '/deals',
     route: DealRoutes
+  },
+  {
+    path: '/checkout',
+    route: OrderRoutes
   },
   {
     path: '/uploads',

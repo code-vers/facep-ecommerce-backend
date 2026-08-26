@@ -252,3 +252,69 @@ enum DealAddedBy {
   ADMIN
   VENDOR
 }
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique 
+  userId          String?
+  
+  fullName        String
+  email           String
+  contactNumber   String
+  address         String
+  country         String
+  city            String
+  location        String 
+  note            String?
+
+  subtotal        Decimal     @db.Decimal(10,2)
+  shippingCost    Decimal     @db.Decimal(10,2)
+  taxAmount       Decimal     @db.Decimal(10,2)
+  vatGst          Decimal     @db.Decimal(10,2)
+  importCharges   Decimal     @db.Decimal(10,2)
+  handlingFee     Decimal     @db.Decimal(10,2)
+  total           Decimal     @db.Decimal(10,2)
+
+  paymentMethod   String      @default("STRIPE")
+  stripeSessionId String?
+  status          OrderStatus @default(PENDING_PAYMENT)
+  
+  items           OrderItem[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String      @id @default(uuid())
+  orderId         String
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  productName     String
+  slug            String
+  sku             String?
+  quantity        Int
+  price           Decimal     @db.Decimal(10,2)
+  image           String?
+  color           String?
+  size            String?
+  storage         String?
+  material        String?
+  vendorName      String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("order_items")
+}
