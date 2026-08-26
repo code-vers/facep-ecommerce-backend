@@ -74,17 +74,23 @@ export const OrderService = {
       }
     });
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: item.name,
-          images: item.image ? [item.image] : []
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => {
+      // Stripe rejects localhost image URLs.
+      const isValidStripeImage =
+        item.image && item.image.startsWith('http') && !item.image.includes('localhost');
+
+      return {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.name,
+            images: isValidStripeImage ? [item.image as string] : []
+          },
+          unit_amount: Math.round(item.price * 100)
         },
-        unit_amount: Math.round(item.price * 100)
-      },
-      quantity: item.quantity
-    }));
+        quantity: item.quantity
+      };
+    });
 
     // Add extra fees
     const extraFees =
@@ -126,12 +132,9 @@ export const OrderService = {
       });
 
       return { url: session.url, orderNumber };
-    } catch {
-      return {
-        url: `${frontendUrl}/checkout/success?order=${order.orderNumber}`,
-        orderNumber,
-        mock: true
-      };
+    } catch (error: unknown) {
+      console.log('Stripe Checkout Error:', error);
+      throw error;
     }
   },
 
