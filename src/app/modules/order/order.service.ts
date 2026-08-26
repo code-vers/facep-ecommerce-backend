@@ -2,7 +2,7 @@ import prisma from '../../utils/prisma';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
-  apiVersion: '2024-06-20' as unknown as '2024-06-20'
+  apiVersion: '2026-07-29.dahlia'
 });
 
 interface CheckoutItem {
@@ -150,7 +150,7 @@ export const OrderService = {
     }
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Record<string, unknown>;
+      const session = event.data.object as Stripe.Checkout.Session;
       if (session.client_reference_id) {
         await prisma.order.update({
           where: { id: session.client_reference_id as string },
