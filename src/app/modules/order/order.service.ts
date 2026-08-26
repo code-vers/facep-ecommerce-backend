@@ -161,5 +161,59 @@ export const OrderService = {
         });
       }
     }
+  },
+
+  async getMyOrders(
+    userId: string,
+    options: { page?: number; limit?: number; search?: string; status?: string }
+  ) {
+    const page = options.page || 1;
+    const limit = options.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = { userId };
+
+    if (options.status && options.status !== 'All Orders') {
+      const statusMap: Record<string, string[]> = {
+        Ordered: ['PENDING_PAYMENT', 'PAID'],
+        Packed: ['PROCESSING'],
+        Shipped: ['SHIPPED'],
+        Delivered: ['DELIVERED'],
+        Returned: ['CANCELLED'] // Assuming cancelled/returned
+      };
+
+      const mappedStatuses = statusMap[options.status];
+      if (mappedStatuses) {
+        where.status = { in: mappedStatuses };
+      }
+    }
+
+    if (options.search) {
+      where.OR = [
+        { orderNumber: { contains: options.search, mode: 'insensitive' } },
+        { items: { some: { productName: { contains: options.search, mode: 'insensitive' } } } }
+      ];
+    }
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.order.count({ where })
+    ]);
+
+    return {
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      },
+      data: orders
+    };
   }
 };

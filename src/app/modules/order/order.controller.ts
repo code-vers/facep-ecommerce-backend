@@ -3,10 +3,24 @@ import { OrderService } from './order.service';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 
+import jwt from 'jsonwebtoken';
+import config from '../../config';
+
 export const OrderController = {
   createCheckoutSession: catchAsync(async (req: Request, res: Response) => {
     // Check if authenticated
-    const userId = (req as Request & { user?: { userId: string } }).user?.userId;
+    let userId: string | undefined;
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = jwt.verify(token, config.jwt.accessSecret) as { userId: string };
+        userId = decoded.userId;
+      } catch (error) {
+        // Ignore invalid tokens for checkout (fallback to guest)
+      }
+    }
+
     const result = await OrderService.createCheckoutSession(req.body, userId);
     sendResponse(res, {
       statusCode: 200,
@@ -20,5 +34,23 @@ export const OrderController = {
     const signature = req.headers['stripe-signature'] as string;
     await OrderService.handleWebhook(req.body, signature);
     res.json({ received: true });
+  }),
+
+  getMyOrders: catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as Request & { user: { userId: string } }).user.userId;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
+
+    const result = await OrderService.getMyOrders(userId, { page, limit, search, status });
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Orders retrieved successfully',
+      meta: result.meta,
+      data: result.data
+    });
   })
 };
