@@ -17,5 +17,6 @@ router.patch(
   auth('VENDOR', 'ADMIN'),
   OrderController.updateOrderStatus
 );
+router.delete('/vendor-orders/:orderId', auth('VENDOR', 'ADMIN'), OrderController.deleteOrder);
 
 export const OrderRoutes = router;

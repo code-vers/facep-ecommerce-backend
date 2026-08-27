@@ -300,5 +300,22 @@ export const OrderService = {
       where: { id: orderId },
       data: { status: status as any }
     });
+  },
+
+  async deleteOrder(orderId: string, vendorId: string) {
+    if (vendorId !== 'ADMIN_BYPASS') {
+      const products = await prisma.product.findMany({ where: { vendorId }, select: { id: true } });
+      const productIds = products.map((p) => p.id);
+      const order = await prisma.order.findFirst({
+        where: { id: orderId, items: { some: { productId: { in: productIds } } } }
+      });
+      if (!order) {
+        throw new Error('Order not found or unauthorized');
+      }
+    }
+
+    return await prisma.order.delete({
+      where: { id: orderId }
+    });
   }
 };

@@ -98,5 +98,21 @@ export const OrderController = {
       message: 'Order status updated successfully',
       data: result
     });
+  }),
+
+  deleteOrder: catchAsync(async (req: Request, res: Response) => {
+    const user = (req as Request & { user: { userId: string; role: string } }).user;
+    const vendorId = user.userId;
+    const role = user.role;
+    const orderId = req.params.orderId as string;
+
+    await OrderService.deleteOrder(orderId, role === 'ADMIN' ? 'ADMIN_BYPASS' : vendorId);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Order deleted successfully',
+      data: null
+    });
   })
 };
