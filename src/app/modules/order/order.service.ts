@@ -278,8 +278,24 @@ export const OrderService = {
             items: order.items.filter((item) => productIds.includes(item.productId))
           }));
 
+    // Calculate stats
+    const allWhere = role === 'ADMIN' ? {} : { items: { some: { productId: { in: productIds } } } };
+    const allOrders = await prisma.order.findMany({
+      where: allWhere,
+      select: { status: true }
+    });
+
+    const stats = {
+      totalOrders: allOrders.length,
+      completedOrders: allOrders.filter((o) => o.status === 'DELIVERED').length,
+      pendingOrders: allOrders.filter(
+        (o) => o.status === 'PENDING_PAYMENT' || o.status === 'PROCESSING'
+      ).length,
+      cancelledOrders: allOrders.filter((o) => o.status === 'CANCELLED').length
+    };
+
     return {
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit), stats },
       data: filteredOrders
     };
   },
