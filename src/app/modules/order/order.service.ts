@@ -155,10 +155,70 @@ export const OrderService = {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.client_reference_id) {
+        const orderId = session.client_reference_id as string;
+
         await prisma.order.update({
-          where: { id: session.client_reference_id as string },
+          where: { id: orderId },
           data: { status: 'PAID' }
         });
+
+        // Calculate and distribute earnings
+        const order = await prisma.order.findUnique({
+          where: { id: orderId },
+          include: { items: true }
+        });
+
+        if (order) {
+          const productIds = order.items.map((i) => i.productId);
+          const products = await prisma.product.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, vendorId: true }
+          });
+
+          const vendorMap = new Map<string, string>();
+          products.forEach((p) => {
+            if (p.vendorId) vendorMap.set(p.id, p.vendorId);
+          });
+
+          const earningsByVendor: Record<string, number> = {};
+
+          order.items.forEach((item) => {
+            const vendorId = vendorMap.get(item.productId);
+            if (vendorId) {
+              const totalItemPrice = Number(item.price) * item.quantity;
+              earningsByVendor[vendorId] = (earningsByVendor[vendorId] || 0) + totalItemPrice;
+            }
+          });
+
+          // Create earnings and update pending balance
+          for (const [vendorId, totalSales] of Object.entries(earningsByVendor)) {
+            const adminCommission = totalSales * 0.1; // 10%
+            const vendorAmount = totalSales * 0.9; // 90%
+
+            await prisma.orderEarning.create({
+              data: {
+                orderId,
+                vendorId,
+                amount: vendorAmount,
+                adminCommission,
+                isCleared: false
+              }
+            });
+
+            await prisma.vendorWallet.upsert({
+              where: { vendorId },
+              update: {
+                pendingBalance: { increment: vendorAmount }
+              },
+              create: {
+                vendorId,
+                pendingBalance: vendorAmount,
+                availableBalance: 0,
+                totalWithdrawn: 0
+              }
+            });
+          }
+        }
       }
     }
   },
@@ -312,10 +372,34 @@ export const OrderService = {
       }
     }
 
-    return await prisma.order.update({
+    const updated = await prisma.order.update({
       where: { id: orderId },
       data: { status: status as any }
     });
+
+    if (status === 'DELIVERED') {
+      // Clear earnings for all vendors in this order
+      const earnings = await prisma.orderEarning.findMany({
+        where: { orderId, isCleared: false }
+      });
+
+      for (const earning of earnings) {
+        await prisma.orderEarning.update({
+          where: { id: earning.id },
+          data: { isCleared: true }
+        });
+
+        await prisma.vendorWallet.update({
+          where: { vendorId: earning.vendorId },
+          data: {
+            pendingBalance: { decrement: earning.amount },
+            availableBalance: { increment: earning.amount }
+          }
+        });
+      }
+    }
+
+    return updated;
   },
 
   async deleteOrder(orderId: string, vendorId: string) {
