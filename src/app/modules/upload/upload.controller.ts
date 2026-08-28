@@ -29,6 +29,25 @@ const uploadFiles = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const uploadAvatar = catchAsync(async (req: Request, res: Response) => {
+  if (!req.file) {
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: 'No avatar file was uploaded',
+      data: null
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Avatar uploaded successfully',
+    data: `/uploads/avatars/${req.file.filename}`
+  });
+});
+
 export const UploadController = {
-  uploadFiles
+  uploadFiles,
+  uploadAvatar
 };

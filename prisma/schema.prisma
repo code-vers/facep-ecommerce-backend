@@ -7,19 +7,84 @@ datasource db {
 }
 
 model User {
-  id                   String    @id @default(uuid())
-  name                 String
-  email                String    @unique
-  password             String
-  role                 Role      @default(BUYER)
-  passwordResetCode    String?
-  passwordResetExpires DateTime?
-  products             Product[]
-  deals                Deal[]    @relation("DealCreator")
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                     String               @id @default(uuid())
+  name                   String
+  email                  String               @unique
+  password               String
+  role                   Role                 @default(BUYER)
+  contactNumber          String?
+  address                String?
+  avatarUrl              String?
+  preferredPaymentMethod PaymentMethod        @default(COD)
+  isActive               Boolean              @default(true)
+  deletedAt              DateTime?
+  passwordResetCode      String?
+  passwordResetExpires   DateTime?
+  products               Product[]
+  deals                  Deal[]               @relation("DealCreator")
+  addresses              UserAddress[]
+  paymentMethods         SavedPaymentMethod[]
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
 
   @@map("users")
+}
+
+enum PaymentMethod {
+  COD
+  CARD
+}
+
+model UserAddress {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String
+  addressLine String
+  phone       String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@map("user_addresses")
+}
+
+model SavedPaymentMethod {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  brand     CardBrand
+  last4     String
+  expiry    String
+  isDefault Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@map("saved_payment_methods")
+}
+
+enum CardBrand {
+  VISA
+  MASTERCARD
+}
+
+model PlatformSettings {
+  id                String   @id @default("platform")
+  siteName          String   @default("Facep")
+  adminEmail        String?
+  supportEmail      String?
+  address           String?
+  defaultCurrency   String   @default("USD")
+  defaultTimezone   String   @default("Asia/Dhaka")
+  commissionRate    Decimal  @default(0) @db.Decimal(5, 2)
+  paymentGatewayFee Decimal  @default(0) @db.Decimal(5, 2)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("platform_settings")
 }
 
 enum Role {
@@ -29,30 +94,30 @@ enum Role {
 }
 
 model Courier {
-  id           String   @id @default(uuid())
-  name         String   @unique
-  rate         Decimal  @db.Decimal(10, 2)
+  id           String    @id @default(uuid())
+  name         String    @unique
+  rate         Decimal   @db.Decimal(10, 2)
   deliveryTime String
-  shipments    Int      @default(0)
-  isActive     Boolean  @default(true)
+  shipments    Int       @default(0)
+  isActive     Boolean   @default(true)
   products     Product[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@map("couriers")
 }
 
 model ShippingZone {
-  id             String   @id @default(uuid())
-  zoneName       String   @unique
+  id             String    @id @default(uuid())
+  zoneName       String    @unique
   countries      String
-  baseRate       Decimal  @db.Decimal(10, 2)
-  perKgRate      Decimal  @db.Decimal(10, 2)
-  isFreeShipping Boolean  @default(false)
-  isActive       Boolean  @default(true)
+  baseRate       Decimal   @db.Decimal(10, 2)
+  perKgRate      Decimal   @db.Decimal(10, 2)
+  isFreeShipping Boolean   @default(false)
+  isActive       Boolean   @default(true)
   products       Product[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@map("shipping_zones")
 }
@@ -70,18 +135,18 @@ model Category {
 }
 
 model Subcategory {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   name       String
   categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products   Product[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@unique([name, categoryId])
   @@map("subcategories")
 }
- 
+
 enum InquiryStatus {
   PENDING
   REPLIED
@@ -123,63 +188,63 @@ enum StockStatus {
 }
 
 model Product {
-  id                    String    @id @default(uuid())
-  name                  String
-  slug                  String    @unique
-  sku                   String    @unique
-  vendorId              String?
-  vendor                User?     @relation(fields: [vendorId], references: [id])
-  isActive               Boolean   @default(true)
-  publishedAt            DateTime  @default(now())
-  
-  brand                 String?
-  productType           String?
-  shortDescription      String?
-  categoryId            String
-  category              Category  @relation(fields: [categoryId], references: [id])
-  subcategoryId         String?
-  subcategory           Subcategory? @relation(fields: [subcategoryId], references: [id])
-  tags                  String[] 
-  condition             Condition @default(NEW)
-  availableColors       String[]  
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  sku         String   @unique
+  vendorId    String?
+  vendor      User?    @relation(fields: [vendorId], references: [id])
+  isActive    Boolean  @default(true)
+  publishedAt DateTime @default(now())
 
-  thumbnail             String    
-  previewImages         String[]  
-  hasVariants           Boolean   @default(false)
-  variants              ProductVariant[]
+  brand            String?
+  productType      String?
+  shortDescription String?
+  categoryId       String
+  category         Category     @relation(fields: [categoryId], references: [id])
+  subcategoryId    String?
+  subcategory      Subcategory? @relation(fields: [subcategoryId], references: [id])
+  tags             String[]
+  condition        Condition    @default(NEW)
+  availableColors  String[]
 
-  basePrice             Decimal   @db.Decimal(10, 2)
-  oldPrice              Decimal?  @db.Decimal(10, 2)
-  discountType          DiscountType?
-  discountValue         Decimal?  @db.Decimal(10, 2)
-  dealBadgeText         String?
-  dealStartDate         DateTime?
-  dealEndDate           DateTime?
-  taxAmount             Decimal?  @db.Decimal(10, 2)
-  vatGst                Decimal?  @db.Decimal(10, 2)
-  importCharges         Decimal?  @db.Decimal(10, 2)
-  handlingFee           Decimal?  @db.Decimal(10, 2)
+  thumbnail     String
+  previewImages String[]
+  hasVariants   Boolean          @default(false)
+  variants      ProductVariant[]
 
-  shipsFrom             String
-  minDeliveryDays       Int
-  maxDeliveryDays       Int
-  shippingFeeType       ShippingFeeType @default(FREE)
-  shippingCost          Decimal?  @db.Decimal(10, 2)    
-  shippingZoneId        String?   
-  shippingZone          ShippingZone? @relation(fields: [shippingZoneId], references: [id])
-  courierId             String?   
-  courier               Courier?  @relation(fields: [courierId], references: [id])
-  deliveryStandard      Boolean   @default(false)
-  deliveryCod           Boolean   @default(false)
-  deliveryExpress       Boolean   @default(false)
-  deliveryReturnPickup  Boolean   @default(false)
+  basePrice     Decimal       @db.Decimal(10, 2)
+  oldPrice      Decimal?      @db.Decimal(10, 2)
+  discountType  DiscountType?
+  discountValue Decimal?      @db.Decimal(10, 2)
+  dealBadgeText String?
+  dealStartDate DateTime?
+  dealEndDate   DateTime?
+  taxAmount     Decimal?      @db.Decimal(10, 2)
+  vatGst        Decimal?      @db.Decimal(10, 2)
+  importCharges Decimal?      @db.Decimal(10, 2)
+  handlingFee   Decimal?      @db.Decimal(10, 2)
 
-  specifications        ProductSpecification[]
-  keyFeatures           String?   @db.Text
-  detailedDescription   String?   @db.Text
-  returnPolicy          String?
-  returnTerms           String?   @db.Text
-  
+  shipsFrom            String
+  minDeliveryDays      Int
+  maxDeliveryDays      Int
+  shippingFeeType      ShippingFeeType @default(FREE)
+  shippingCost         Decimal?        @db.Decimal(10, 2)
+  shippingZoneId       String?
+  shippingZone         ShippingZone?   @relation(fields: [shippingZoneId], references: [id])
+  courierId            String?
+  courier              Courier?        @relation(fields: [courierId], references: [id])
+  deliveryStandard     Boolean         @default(false)
+  deliveryCod          Boolean         @default(false)
+  deliveryExpress      Boolean         @default(false)
+  deliveryReturnPickup Boolean         @default(false)
+
+  specifications      ProductSpecification[]
+  keyFeatures         String?                @db.Text
+  detailedDescription String?                @db.Text
+  returnPolicy        String?
+  returnTerms         String?                @db.Text
+
   stockQuantity         Int
   stockStatus           StockStatus @default(AVAILABLE)
   lowStockAlertQuantity Int
@@ -188,8 +253,8 @@ model Product {
   inventoryManagedBy    String?
   warehouseLocation     String?
 
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([vendorId, createdAt])
   @@index([isActive, createdAt])
@@ -201,49 +266,49 @@ model Product {
 }
 
 model ProductVariant {
-  id          String   @id @default(uuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  sku         String   @unique
-  image       String?  
-  color       String?  
-  size        String?
-  material    String?
-  storage     String?
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku       String  @unique
+  image     String?
+  color     String?
+  size      String?
+  material  String?
+  storage   String?
+  price     Decimal @db.Decimal(10, 2)
+  stock     Int
 
   @@map("product_variants")
 }
 
 model ProductSpecification {
-  id          String   @id @default(uuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name        String
-  value       String
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  value     String
 
   @@map("product_specifications")
 }
 
 model Deal {
-  id                    String    @id @default(uuid())
-  title                 String
-  bannerHeading         String?
-  bannerSubheading      String?
-  bannerImage           String?
-  bannerBgColor         String?   @default("#ffca08")
-  createdById           String?   @map("user_id")
-  createdBy             User?     @relation("DealCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  addedBy               DealAddedBy? @map("added_by")
-  categoryIds           String[]
-  discountStartPercent  Decimal?  @db.Decimal(5, 2)
-  discountEndPercent    Decimal?  @db.Decimal(5, 2)
-  startDate             DateTime?
-  endDate               DateTime?
-  isActive              Boolean   @default(true)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                   String       @id @default(uuid())
+  title                String
+  bannerHeading        String?
+  bannerSubheading     String?
+  bannerImage          String?
+  bannerBgColor        String?      @default("#ffca08")
+  createdById          String?      @map("user_id")
+  createdBy            User?        @relation("DealCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  addedBy              DealAddedBy? @map("added_by")
+  categoryIds          String[]
+  discountStartPercent Decimal?     @db.Decimal(5, 2)
+  discountEndPercent   Decimal?     @db.Decimal(5, 2)
+  startDate            DateTime?
+  endDate              DateTime?
+  isActive             Boolean      @default(true)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
   @@map("deals")
 }
