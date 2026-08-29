@@ -25,6 +25,7 @@ model User {
   deals          Deal[]               @relation("DealCreator")
   addresses      UserAddress[]
   paymentMethods SavedPaymentMethod[]
+  wishlists      Wishlist[]
 
   wallet   VendorWallet?   @relation("VendorWallet")
   earnings OrderEarning[]  @relation("VendorEarnings")
@@ -250,6 +251,7 @@ model Product {
   detailedDescription String?                @db.Text
   returnPolicy        String?
   returnTerms         String?                @db.Text
+  wishlistItems       Wishlist[]
 
   stockQuantity         Int
   stockStatus           StockStatus @default(AVAILABLE)
@@ -439,3 +441,18 @@ model PayoutRequest {
 
   @@map("payout_requests")
 }
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId, createdAt])
+  @@map("wishlists")
+}
+

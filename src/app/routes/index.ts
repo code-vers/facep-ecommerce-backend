@@ -12,6 +12,7 @@ import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
 import { DealRoutes } from '../modules/deal/deal.route';
 import { OrderRoutes } from '../modules/order/order.route';
 import { PayoutRoutes } from '../modules/payout/payout.route';
+import { WishlistRoutes } from '../modules/wishlist/wishlist.route';
 
 const router = Router();
 
@@ -59,6 +60,10 @@ const moduleRoutes = [
   {
     path: '/payouts',
     route: PayoutRoutes
+  },
+  {
+    path: '/wishlist',
+    route: WishlistRoutes
   }
 ];
 
