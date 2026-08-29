@@ -20,12 +20,19 @@ model User {
   deletedAt              DateTime?
   passwordResetCode      String?
   passwordResetExpires   DateTime?
-  products               Product[]
-  deals                  Deal[]               @relation("DealCreator")
-  addresses              UserAddress[]
-  paymentMethods         SavedPaymentMethod[]
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
+
+  products       Product[]
+  deals          Deal[]               @relation("DealCreator")
+  addresses      UserAddress[]
+  paymentMethods SavedPaymentMethod[]
+  wishlists      Wishlist[]
+
+  wallet   VendorWallet?   @relation("VendorWallet")
+  earnings OrderEarning[]  @relation("VendorEarnings")
+  payouts  PayoutRequest[] @relation("VendorPayouts")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
@@ -244,6 +251,7 @@ model Product {
   detailedDescription String?                @db.Text
   returnPolicy        String?
   returnTerms         String?                @db.Text
+  wishlistItems       Wishlist[]
 
   stockQuantity         Int
   stockStatus           StockStatus @default(AVAILABLE)
@@ -317,3 +325,134 @@ enum DealAddedBy {
   ADMIN
   VENDOR
 }
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique 
+  userId          String?
+  
+  fullName        String
+  email           String
+  contactNumber   String
+  address         String
+  country         String
+  city            String
+  location        String 
+  note            String?
+
+  subtotal        Decimal     @db.Decimal(10,2)
+  shippingCost    Decimal     @db.Decimal(10,2)
+  taxAmount       Decimal     @db.Decimal(10,2)
+  vatGst          Decimal     @db.Decimal(10,2)
+  importCharges   Decimal     @db.Decimal(10,2)
+  handlingFee     Decimal     @db.Decimal(10,2)
+  total           Decimal     @db.Decimal(10,2)
+
+  paymentMethod   String      @default("STRIPE")
+  stripeSessionId String?
+  status          OrderStatus @default(PENDING_PAYMENT)
+  
+  items           OrderItem[]
+  earnings        OrderEarning[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String      @id @default(uuid())
+  orderId         String
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  productName     String
+  slug            String
+  sku             String?
+  quantity        Int
+  price           Decimal     @db.Decimal(10,2)
+  image           String?
+  color           String?
+  size            String?
+  storage         String?
+  material        String?
+  vendorName      String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("order_items")
+}
+
+model OrderEarning {
+  id              String   @id @default(uuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendorId        String
+  vendor          User     @relation("VendorEarnings", fields: [vendorId], references: [id])
+  amount          Decimal  @db.Decimal(10,2)
+  adminCommission Decimal  @db.Decimal(10,2)
+  isCleared       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("order_earnings")
+}
+
+model VendorWallet {
+  id               String   @id @default(uuid())
+  vendorId         String   @unique
+  vendor           User     @relation("VendorWallet", fields: [vendorId], references: [id])
+  pendingBalance   Decimal  @default(0) @db.Decimal(10,2)
+  availableBalance Decimal  @default(0) @db.Decimal(10,2)
+  totalWithdrawn   Decimal  @default(0) @db.Decimal(10,2)
+  updatedAt        DateTime @updatedAt
+
+  @@map("vendor_wallets")
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model PayoutRequest {
+  id             String       @id @default(uuid())
+  vendorId       String
+  vendor         User         @relation("VendorPayouts", fields: [vendorId], references: [id])
+  amount         Decimal      @db.Decimal(10,2)
+  paymentMethod  String       
+  accountDetails String       @db.Text
+  status         PayoutStatus @default(PENDING)
+  adminNotes     String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("payout_requests")
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId, createdAt])
+  @@map("wishlists")
+}
+

@@ -11,6 +11,8 @@ import notFound from './app/middlewares/notFound';
 import router from './app/routes';
 import sendResponse from './app/utils/sendResponse';
 
+import { OrderController } from './app/modules/order/order.controller';
+
 const app: Application = express();
 
 const corsOptions: CorsOptions = {
@@ -21,6 +23,14 @@ const corsOptions: CorsOptions = {
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors(corsOptions));
+
+// Stripe Webhook MUST be before express.json()
+app.post(
+  '/api/v1/checkout/webhook',
+  express.raw({ type: 'application/json' }),
+  OrderController.stripeWebhook
+);
+
 app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));

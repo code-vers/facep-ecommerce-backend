@@ -10,6 +10,9 @@ import { InquiryRoutes } from '../modules/inquiry/inquiry.route';
 import { ProductRoutes } from '../modules/product/product.route';
 import { ShippingZoneRoutes } from '../modules/shippingZone/shippingZone.route';
 import { DealRoutes } from '../modules/deal/deal.route';
+import { OrderRoutes } from '../modules/order/order.route';
+import { PayoutRoutes } from '../modules/payout/payout.route';
+import { WishlistRoutes } from '../modules/wishlist/wishlist.route';
 
 const router = Router();
 
@@ -47,8 +50,20 @@ const moduleRoutes = [
     route: DealRoutes
   },
   {
+    path: '/checkout',
+    route: OrderRoutes
+  },
+  {
     path: '/uploads',
     route: UploadRoutes
+  },
+  {
+    path: '/payouts',
+    route: PayoutRoutes
+  },
+  {
+    path: '/wishlist',
+    route: WishlistRoutes
   }
 ];
 
