@@ -1,3 +1,4 @@
+import AppError from '../../errors/AppError';
 import prisma from '../../utils/prisma';
 import Stripe from 'stripe';
 
@@ -255,7 +256,7 @@ export const OrderService = {
       ];
     }
 
-    const [orders, total] = await Promise.all([
+    const [orders, total, allUserOrders] = await Promise.all([
       prisma.order.findMany({
         where,
         include: { items: true },
@@ -263,18 +264,87 @@ export const OrderService = {
         skip,
         take: limit
       }),
-      prisma.order.count({ where })
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where: { userId },
+        select: { status: true }
+      })
     ]);
+
+    const stats = {
+      all: allUserOrders.length,
+      ordered: allUserOrders.filter((o) => o.status === 'PENDING_PAYMENT' || o.status === 'PAID')
+        .length,
+      packed: allUserOrders.filter((o) => o.status === 'PROCESSING').length,
+      shipped: allUserOrders.filter((o) => o.status === 'SHIPPED').length,
+      delivered: allUserOrders.filter((o) => o.status === 'DELIVERED').length,
+      returned: allUserOrders.filter((o) => o.status === 'CANCELLED').length
+    };
 
     return {
       meta: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
+        totalPages: Math.ceil(total / limit),
+        stats
       },
       data: orders
     };
+  },
+
+  async getMyOrderById(userId: string, orderIdOrNumber: string) {
+    const order = await prisma.order.findFirst({
+      where: {
+        userId,
+        OR: [{ id: orderIdOrNumber }, { orderNumber: orderIdOrNumber }]
+      },
+      include: { items: true }
+    });
+
+    if (!order) {
+      throw new AppError(404, 'Order not found');
+    }
+
+    return order;
+  },
+
+  async cancelUserOrder(userId: string, orderIdOrNumber: string, reason?: string) {
+    const order = await prisma.order.findFirst({
+      where: {
+        userId,
+        OR: [{ id: orderIdOrNumber }, { orderNumber: orderIdOrNumber }]
+      }
+    });
+
+    if (!order) {
+      throw new AppError(404, 'Order not found');
+    }
+
+    if (order.status === 'DELIVERED') {
+      throw new AppError(400, 'Cannot cancel an order that has already been delivered');
+    }
+
+    if (order.status === 'CANCELLED') {
+      throw new AppError(400, 'Order is already cancelled');
+    }
+
+    const updated = await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        status: 'CANCELLED',
+        ...(reason
+          ? {
+              note: order.note
+                ? `${order.note} | Cancellation reason: ${reason}`
+                : `Cancellation reason: ${reason}`
+            }
+          : {})
+      },
+      include: { items: true }
+    });
+
+    return updated;
   },
 
   async getVendorOrders(

@@ -25,7 +25,10 @@ const updateDealSchema = z.object({
     bannerSubheading: z.string().optional(),
     bannerImage: z.string().optional(),
     bannerBgColor: z.string().optional(),
-    categoryIds: z.array(z.string().trim().min(1)).min(1, 'Select at least one category.').optional(),
+    categoryIds: z
+      .array(z.string().trim().min(1))
+      .min(1, 'Select at least one category.')
+      .optional(),
     discountStartPercent: z.number().optional(),
     discountEndPercent: z.number().optional(),
     startDate: z.string().optional(),

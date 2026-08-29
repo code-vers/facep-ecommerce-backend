@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import bcrypt from 'bcryptjs';
 
 import prisma from '../../utils/prisma';

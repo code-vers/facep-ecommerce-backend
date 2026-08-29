@@ -74,7 +74,8 @@ const deleteDeal: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const getUnavailableCategoryIds: RequestHandler = catchAsync(async (req, res) => {
-  const excludeDealId = typeof req.query.excludeDealId === 'string' ? req.query.excludeDealId : undefined;
+  const excludeDealId =
+    typeof req.query.excludeDealId === 'string' ? req.query.excludeDealId : undefined;
   const result = await DealService.getUnavailableCategoryIds(req.user!, excludeDealId);
 
   sendResponse(res, {

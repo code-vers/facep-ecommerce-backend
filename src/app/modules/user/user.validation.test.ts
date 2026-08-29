@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { UserValidation } from './user.validation';
 
 describe('User profile validation', () => {

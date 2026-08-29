@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import prisma from '../../utils/prisma';
 import { AuthService } from './auth.service';
 
