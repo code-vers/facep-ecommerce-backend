@@ -41,10 +41,7 @@ export interface IInquiryEmailData {
   createdAt: Date | string;
 }
 
-export const sendInquiryEmail = async (
-  to: string,
-  inquiry: IInquiryEmailData
-): Promise<void> => {
+export const sendInquiryEmail = async (to: string, inquiry: IInquiryEmailData): Promise<void> => {
   const subject = `New Support Inquiry from ${inquiry.name}`;
 
   const formattedDate = new Date(inquiry.createdAt).toLocaleString('en-US', {
@@ -162,4 +159,3 @@ export const sendInquiryEmail = async (
 
   await sendEmail(to, subject, html);
 };
-

@@ -14,11 +14,7 @@ async function main() {
 
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {
-      password: hashedPassword,
-      role: 'ADMIN',
-      name: 'System Admin'
-    },
+    update: {},
     create: {
       email: adminEmail,
       password: hashedPassword,
@@ -28,6 +24,16 @@ async function main() {
   });
 
   logger.info(`Admin user ensured in database: ${adminUser.email}`);
+  await prisma.platformSettings.upsert({
+    where: { id: 'platform' },
+    update: {},
+    create: {
+      id: 'platform',
+      siteName: 'Facep',
+      adminEmail
+    }
+  });
+  logger.info('Platform settings ensured in database.');
   logger.info('Seeding finished.');
 }
 

@@ -50,6 +50,10 @@ const auth = (...requiredRoles: UserRole[]): RequestHandler => {
         return next(new AppError(401, 'User associated with this token no longer exists.'));
       }
 
+      if (!user.isActive) {
+        return next(new AppError(403, 'User account is deactivated.'));
+      }
+
       req.user = decoded;
       return next();
     } catch (_error) {

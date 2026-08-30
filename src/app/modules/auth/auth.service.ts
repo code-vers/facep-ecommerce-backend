@@ -74,6 +74,13 @@ const login = async (payload: IUserLoginPayload): Promise<ILoginResponse> => {
     throw new AppError(401, 'Invalid email or password.');
   }
 
+  if (!user.isActive) {
+    throw new AppError(
+      403,
+      'User account is deactivated. Contact an administrator to reactivate it.'
+    );
+  }
+
   const isPasswordMatched = await bcrypt.compare(payload.password, user.password);
 
   if (!isPasswordMatched) {
@@ -117,6 +124,10 @@ const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
     throw new AppError(404, 'User does not exist.');
   }
 
+  if (!user.isActive) {
+    throw new AppError(403, 'User account is deactivated.');
+  }
+
   const authPayload = {
     userId: user.id,
     email: user.email,
@@ -137,7 +148,7 @@ const changePassword = async (userId: string, payload: IChangePasswordPayload): 
     where: { id: userId }
   });
 
-  if (!user) {
+  if (!user || !user.isActive) {
     throw new AppError(404, 'User not found.');
   }
 
@@ -160,7 +171,7 @@ const forgotPassword = async (payload: IForgotPasswordPayload): Promise<void> =>
     where: { email: payload.email }
   });
 
-  if (!user) {
+  if (!user || !user.isActive) {
     // We don't throw an error here to prevent email enumeration.
     return;
   }
@@ -202,6 +213,7 @@ const verifyResetCode = async (
 
   if (
     !user ||
+    !user.isActive ||
     !user.passwordResetCode ||
     !user.passwordResetExpires ||
     user.passwordResetExpires < new Date()
@@ -239,7 +251,7 @@ const resetPassword = async (payload: IResetPasswordPayload): Promise<void> => {
     where: { id: decoded.userId }
   });
 
-  if (!user) {
+  if (!user || !user.isActive) {
     throw new AppError(400, 'Invalid reset token.');
   }
 

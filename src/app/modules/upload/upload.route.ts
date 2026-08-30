@@ -18,7 +18,10 @@ if (!fs.existsSync(baseUploadsDir)) {
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
     // Determine folder from query parameter (e.g. ?folder=deals) or route params
-    const folder = (req.query.folder as string) || (req.params as any)?.folder || 'products';
+    const folder =
+      req.path === '/avatar'
+        ? 'avatars'
+        : (req.query.folder as string) || (req.params as any)?.folder || 'products';
     const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '') || 'products';
     const targetDir = path.join(baseUploadsDir, safeFolder);
 
@@ -63,6 +66,13 @@ const upload = multer({
     files: 10
   }
 });
+
+router.post(
+  '/avatar',
+  auth(Role.BUYER, Role.VENDOR, Role.ADMIN),
+  upload.single('file'),
+  UploadController.uploadAvatar
+);
 
 // Endpoint accepts an array of files under key 'files' with optional ?folder=deals query
 router.post(

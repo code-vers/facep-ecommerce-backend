@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { ProductValidation } from './product.validation';
 
 const validBody = {
@@ -25,7 +26,7 @@ const validBody = {
   stockStatus: 'AVAILABLE',
   lowStockAlertQuantity: 2,
   minOrderQuantity: 1,
-  maxOrderQuantity: 5,
+  maxOrderQuantity: 5
 };
 
 describe('Product validation', () => {
@@ -36,7 +37,7 @@ describe('Product validation', () => {
 
   it('requires the real product name', () => {
     const result = ProductValidation.createProductValidationSchema.safeParse({
-      body: { ...validBody, name: '' },
+      body: { ...validBody, name: '' }
     });
     expect(result.success).toBe(false);
   });
@@ -48,8 +49,8 @@ describe('Product validation', () => {
         minDeliveryDays: 5,
         maxDeliveryDays: 2,
         minOrderQuantity: 5,
-        maxOrderQuantity: 2,
-      },
+        maxOrderQuantity: 2
+      }
     });
     expect(result.success).toBe(false);
   });
@@ -59,15 +60,15 @@ describe('Product validation', () => {
       body: {
         ...validBody,
         discountType: 'PERCENTAGE',
-        discountValue: 101,
-      },
+        discountValue: 101
+      }
     });
     expect(result.success).toBe(false);
   });
 
   it('requires variants when variants are enabled', () => {
     const result = ProductValidation.createProductValidationSchema.safeParse({
-      body: { ...validBody, hasVariants: true },
+      body: { ...validBody, hasVariants: true }
     });
     expect(result.success).toBe(false);
   });
