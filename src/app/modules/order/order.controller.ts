@@ -54,6 +54,35 @@ export const OrderController = {
     });
   }),
 
+  getMyOrderById: catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as Request & { user: { userId: string } }).user.userId;
+    const orderId = req.params.orderId as string;
+
+    const result = await OrderService.getMyOrderById(userId, orderId);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Order details retrieved successfully',
+      data: result
+    });
+  }),
+
+  cancelUserOrder: catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as Request & { user: { userId: string } }).user.userId;
+    const orderId = req.params.orderId as string;
+    const reason = req.body?.reason as string | undefined;
+
+    const result = await OrderService.cancelUserOrder(userId, orderId, reason);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Order cancelled successfully',
+      data: result
+    });
+  }),
+
   getVendorOrders: catchAsync(async (req: Request, res: Response) => {
     const user = (req as Request & { user: { userId: string; role: string } }).user;
     const vendorId = user.userId;

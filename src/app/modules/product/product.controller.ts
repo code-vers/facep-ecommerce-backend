@@ -143,7 +143,10 @@ const updateProductPromotion: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const removeProductPromotion: RequestHandler = catchAsync(async (req, res) => {
-  const result = await ProductService.removeProductPromotion(req.user!.userId, req.params.id as string);
+  const result = await ProductService.removeProductPromotion(
+    req.user!.userId,
+    req.params.id as string
+  );
   sendResponse(res, {
     statusCode: 200,
     success: true,

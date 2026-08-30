@@ -19,9 +19,9 @@ const asAddedBy = (role: Role): DealAddedBy => {
 
 const scopeWhere = (addedBy: DealAddedBy, userId: string): Prisma.DealWhereInput =>
   addedBy === DealAddedBy.ADMIN
-    // Deals created before ownership tracking have no addedBy value. They were
-    // admin-only deals, so they must also reserve their categories for admins.
-    ? { OR: [{ addedBy: DealAddedBy.ADMIN }, { addedBy: null }] }
+    ? // Deals created before ownership tracking have no addedBy value. They were
+      // admin-only deals, so they must also reserve their categories for admins.
+      { OR: [{ addedBy: DealAddedBy.ADMIN }, { addedBy: null }] }
     : { addedBy: DealAddedBy.VENDOR, createdById: userId };
 
 const vendorReadableWhere = (vendorId: string): Prisma.DealWhereInput => ({
@@ -147,7 +147,13 @@ const getAllDeals = async (actor: DealActor, query: Record<string, unknown>) => 
   }
   const where: Prisma.DealWhereInput = filters.length ? { AND: filters } : {};
   const [data, total] = await Promise.all([
-    prisma.deal.findMany({ where, include: dealInclude, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' } }),
+    prisma.deal.findMany({
+      where,
+      include: dealInclude,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' }
+    }),
     prisma.deal.count({ where })
   ]);
   return { meta: { page, limit, total, totalPage: Math.max(1, Math.ceil(total / limit)) }, data };
@@ -165,7 +171,10 @@ const getSingleDeal = (id: string, actor: DealActor) => getReadableDeal(id, acto
 const getUnavailableCategoryIds = async (actor: DealActor, excludeDealId?: string) => {
   const addedBy = asAddedBy(actor.role);
   const deals = await prisma.deal.findMany({
-    where: { ...scopeWhere(addedBy, actor.userId), ...(excludeDealId ? { id: { not: excludeDealId } } : {}) },
+    where: {
+      ...scopeWhere(addedBy, actor.userId),
+      ...(excludeDealId ? { id: { not: excludeDealId } } : {})
+    },
     select: { categoryIds: true }
   });
   return [...new Set(deals.flatMap((deal) => deal.categoryIds))];
