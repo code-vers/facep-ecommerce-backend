@@ -3,12 +3,22 @@ import prisma from '../src/app/utils/prisma';
 async function seedProducts() {
   console.log('Seeding sample products...');
 
-  const category = await prisma.category.findFirst();
-  const categoryId = category?.id || '53095387-ed73-470f-a084-d1632cf66d9c';
+  let category = await prisma.category.findFirst();
+  if (!category) {
+    category = await prisma.category.create({
+      data: {
+        name: 'General',
+        isActive: true
+      }
+    });
+  }
+  const categoryId = category.id;
 
   const sampleProducts = [
     {
       sku: 'SKU-PLANT-MONSTERA-01',
+      name: 'Monstera Deliciosa Plant',
+      slug: 'monstera-deliciosa-plant-01',
       brand: 'Monstera Deliciosa Plant',
       productType: 'Indoor Plant',
       shortDescription: 'Beautiful Swiss Cheese Plant for indoor decoration.',
@@ -26,6 +36,8 @@ async function seedProducts() {
     },
     {
       sku: 'SKU-PLANT-FDL-02',
+      name: 'Fiddle Leaf Fig Tree',
+      slug: 'fiddle-leaf-fig-tree-02',
       brand: 'Fiddle Leaf Fig Tree',
       productType: 'Tree',
       shortDescription: 'Tall and elegant Ficus Lyrata for living rooms.',
@@ -43,6 +55,8 @@ async function seedProducts() {
     },
     {
       sku: 'SKU-PLANT-SNAKE-03',
+      name: 'Sansevieria Snake Plant',
+      slug: 'sansevieria-snake-plant-03',
       brand: 'Sansevieria Snake Plant',
       productType: 'Indoor Plant',
       shortDescription: 'Air purifying indoor plant, low maintenance.',
@@ -60,6 +74,8 @@ async function seedProducts() {
     },
     {
       sku: 'SKU-PLANT-POTHOS-04',
+      name: 'Golden Pothos Vine',
+      slug: 'golden-pothos-vine-04',
       brand: 'Golden Pothos Vine',
       productType: 'Hanging Plant',
       shortDescription: 'Cascading golden green vines, fast growing.',
@@ -77,6 +93,8 @@ async function seedProducts() {
     },
     {
       sku: 'SKU-TECH-HEADPHONES-05',
+      name: 'Wireless Noise Canceling Headphones',
+      slug: 'wireless-noise-canceling-headphones-05',
       brand: 'Wireless Noise Canceling Headphones',
       productType: 'Audio',
       shortDescription: 'Premium over-ear Bluetooth headphones with deep bass.',
@@ -94,6 +112,8 @@ async function seedProducts() {
     },
     {
       sku: 'SKU-TECH-WATCH-06',
+      name: 'Smart Fitness Watch Series 5',
+      slug: 'smart-fitness-watch-series-5-06',
       brand: 'Smart Fitness Watch Series 5',
       productType: 'Wearable',
       shortDescription: 'Track heart rate, steps, sleep, and workouts.',

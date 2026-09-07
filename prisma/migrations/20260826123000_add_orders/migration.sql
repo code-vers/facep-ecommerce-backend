@@ -1,8 +1,13 @@
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('PENDING_PAYMENT', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'OrderStatus') THEN
+    CREATE TYPE "OrderStatus" AS ENUM ('PENDING_PAYMENT', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+  END IF;
+END $$;
 
 -- CreateTable
-CREATE TABLE "orders" (
+CREATE TABLE IF NOT EXISTS "orders" (
     "id" TEXT NOT NULL,
     "orderNumber" TEXT NOT NULL,
     "userId" TEXT,
@@ -31,7 +36,7 @@ CREATE TABLE "orders" (
 );
 
 -- CreateTable
-CREATE TABLE "order_items" (
+CREATE TABLE IF NOT EXISTS "order_items" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
@@ -53,7 +58,14 @@ CREATE TABLE "order_items" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "orders_orderNumber_key" ON "orders"("orderNumber");
+CREATE UNIQUE INDEX IF NOT EXISTS "orders_orderNumber_key" ON "orders"("orderNumber");
 
 -- AddForeignKey
-ALTER TABLE "order_items" ADD CONSTRAINT "order_items_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'order_items_orderId_fkey'
+  ) THEN
+    ALTER TABLE "order_items" ADD CONSTRAINT "order_items_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
