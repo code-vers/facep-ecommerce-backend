@@ -1,8 +1,8 @@
 export class QueryBuilder {
-  public prismaArgs: Record<string, any> = {};
-  private query: Record<string, any>;
+  public prismaArgs: Record<string, unknown> = {};
+  private query: Record<string, unknown>;
 
-  constructor(query: Record<string, any>) {
+  constructor(query: Record<string, unknown>) {
     this.query = query;
     this.prismaArgs.where = {};
   }
@@ -10,30 +10,39 @@ export class QueryBuilder {
   search(searchableFields: string[]) {
     const searchTerm = this.query?.searchTerm;
     if (searchTerm && typeof searchTerm === 'string') {
-      this.prismaArgs.where.OR = searchableFields.map((field) => ({
+      const where = (this.prismaArgs.where || {}) as Record<string, unknown>;
+      where.OR = searchableFields.map((field) => ({
         [field]: {
           contains: searchTerm,
           mode: 'insensitive'
         }
       }));
+      this.prismaArgs.where = where;
     }
     return this;
   }
 
   filter() {
-    const queryObj = { ...this.query };
+    const queryObj: Record<string, unknown> = { ...this.query };
     const excludeFields = ['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'];
     excludeFields.forEach((el) => delete queryObj[el]);
 
+    for (const key of Object.keys(queryObj)) {
+      if (queryObj[key] === 'true') queryObj[key] = true;
+      if (queryObj[key] === 'false') queryObj[key] = false;
+    }
+
     if (Object.keys(queryObj).length > 0) {
+      const currentWhere = (this.prismaArgs.where || {}) as Record<string, unknown>;
       this.prismaArgs.where = {
-        ...this.prismaArgs.where,
+        ...currentWhere,
         ...queryObj
       };
     }
 
     // Clean up empty where object if nothing was added
-    if (Object.keys(this.prismaArgs.where).length === 0) {
+    const where = this.prismaArgs.where as Record<string, unknown> | undefined;
+    if (where && Object.keys(where).length === 0) {
       delete this.prismaArgs.where;
     }
 
@@ -41,8 +50,8 @@ export class QueryBuilder {
   }
 
   sort() {
-    const sortBy = (this.query?.sortBy as string) || 'createdAt';
-    const sortOrder = (this.query?.sortOrder as string) || 'desc';
+    const sortBy = typeof this.query?.sortBy === 'string' ? this.query.sortBy : 'createdAt';
+    const sortOrder = typeof this.query?.sortOrder === 'string' ? this.query.sortOrder : 'desc';
 
     this.prismaArgs.orderBy = {
       [sortBy]: sortOrder
@@ -63,7 +72,8 @@ export class QueryBuilder {
 
   build() {
     // If where is completely empty after all operations, remove it
-    if (this.prismaArgs.where && Object.keys(this.prismaArgs.where).length === 0) {
+    const where = this.prismaArgs.where as Record<string, unknown> | undefined;
+    if (where && Object.keys(where).length === 0) {
       delete this.prismaArgs.where;
     }
     return this.prismaArgs;

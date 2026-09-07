@@ -104,7 +104,9 @@ const deactivateMe = async (userId: string, payload: IDeactivateAccountPayload) 
 const getAllUsers = async (query: Record<string, unknown>) => {
   const queryBuilder = new QueryBuilder(query).search(['name', 'email']).filter().sort().paginate();
   const users = await prisma.user.findMany({ ...queryBuilder.build(), select: publicUserSelect });
-  const total = await prisma.user.count({ where: queryBuilder.build().where });
+  const total = await prisma.user.count({
+    where: queryBuilder.build().where as Prisma.UserWhereInput
+  });
   return {
     meta: { total, page: Number(query.page) || 1, limit: Number(query.limit) || 10 },
     data: users
