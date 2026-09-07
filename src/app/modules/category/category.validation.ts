@@ -5,6 +5,7 @@ const createCategoryValidationSchema = z.object({
     name: z.string({
       message: 'Category name is required'
     }),
+    imageUrl: z.string().trim().optional().nullable(),
     isActive: z.boolean().optional().default(true),
     subcategories: z.array(z.string()).optional().default([])
   })
@@ -13,6 +14,7 @@ const createCategoryValidationSchema = z.object({
 const updateCategoryValidationSchema = z.object({
   body: z.object({
     name: z.string().optional(),
+    imageUrl: z.string().trim().optional().nullable(),
     isActive: z.boolean().optional(),
     subcategories: z.array(z.string()).optional()
   })
