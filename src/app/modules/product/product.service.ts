@@ -346,6 +346,33 @@ const getPublicFacets = async () => {
   };
 };
 
+const getTopCategoriesShowcase = async () => {
+  return await prisma.category.findMany({
+    where: {
+      isActive: true,
+      products: { some: { isActive: true } }
+    },
+    select: {
+      id: true,
+      name: true,
+      imageUrl: true,
+      _count: {
+        select: { products: { where: { isActive: true } } }
+      },
+      products: {
+        where: { isActive: true },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: productInclude
+      }
+    },
+    orderBy: {
+      products: { _count: 'desc' }
+    },
+    take: 5
+  });
+};
+
 const adminWhere = (query: Query): Prisma.ProductWhereInput => {
   const conditions: Prisma.ProductWhereInput[] = [];
   const search = String(query.search ?? query.searchTerm ?? '').trim();
@@ -558,6 +585,7 @@ export const ProductService = {
   createProduct,
   getPublicProducts,
   getPublicFacets,
+  getTopCategoriesShowcase,
   getPublicProductBySlug,
   getRelatedProducts,
   getAdminProducts,

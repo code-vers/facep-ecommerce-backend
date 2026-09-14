@@ -34,6 +34,16 @@ const getPublicFacets: RequestHandler = catchAsync(async (_req, res) => {
   });
 });
 
+const getTopCategoriesShowcase: RequestHandler = catchAsync(async (_req, res) => {
+  const result = await ProductService.getTopCategoriesShowcase();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Top categories showcase retrieved successfully',
+    data: result
+  });
+});
+
 const getPublicProductBySlug: RequestHandler = catchAsync(async (req, res) => {
   const result = await ProductService.getPublicProductBySlug(req.params.slug as string);
   sendResponse(res, {
@@ -169,6 +179,7 @@ export const ProductController = {
   createProduct,
   getPublicProducts,
   getPublicFacets,
+  getTopCategoriesShowcase,
   getPublicProductBySlug,
   getRelatedProducts,
   getAdminProducts,

@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.get('/', ProductController.getPublicProducts);
 router.get('/facets', ProductController.getPublicFacets);
+router.get('/top-categories-showcase', ProductController.getTopCategoriesShowcase);
 router.get('/admin', auth(Role.ADMIN), ProductController.getAdminProducts);
 router.get('/vendor/mine', auth(Role.VENDOR), ProductController.getVendorProducts);
 router.get('/vendor/stats', auth(Role.VENDOR, Role.ADMIN), ProductController.getVendorStats);
