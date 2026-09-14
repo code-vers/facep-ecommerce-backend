@@ -237,6 +237,15 @@ const publicWhere = (query: Query): Prisma.ProductWhereInput => {
   }
   const color = String(query.color ?? '').trim();
   if (color) conditions.push({ availableColors: { has: color } });
+  const vendor = String(query.vendorId ?? query.vendor ?? '').trim();
+  if (vendor) {
+    conditions.push({
+      OR: [
+        { vendorId: vendor },
+        { vendor: { name: { equals: vendor, mode: 'insensitive' } } }
+      ]
+    });
+  }
   const minPrice = Number(query.minPrice);
   const maxPrice = Number(query.maxPrice);
   if (Number.isFinite(minPrice)) conditions.push({ basePrice: { gte: minPrice } });
@@ -258,6 +267,8 @@ const getOrderBy = (sort: unknown): Prisma.ProductOrderByWithRelationInput => {
       return { name: 'desc' };
     case 'discount-desc':
       return { discountValue: 'desc' };
+    case 'oldest':
+      return { createdAt: 'asc' };
     default:
       return { createdAt: 'desc' };
   }
