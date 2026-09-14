@@ -240,10 +240,7 @@ const publicWhere = (query: Query): Prisma.ProductWhereInput => {
   const vendor = String(query.vendorId ?? query.vendor ?? '').trim();
   if (vendor) {
     conditions.push({
-      OR: [
-        { vendorId: vendor },
-        { vendor: { name: { equals: vendor, mode: 'insensitive' } } }
-      ]
+      OR: [{ vendorId: vendor }, { vendor: { name: { equals: vendor, mode: 'insensitive' } } }]
     });
   }
   const minPrice = Number(query.minPrice);
