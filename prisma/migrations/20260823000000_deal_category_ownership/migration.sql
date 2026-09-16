@@ -1,7 +1,11 @@
-DROP TYPE IF EXISTS "DealAddedBy";
-CREATE TYPE "DealAddedBy" AS ENUM ('ADMIN', 'VENDOR');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'DealAddedBy') THEN
+    CREATE TYPE "DealAddedBy" AS ENUM ('ADMIN', 'VENDOR');
+  END IF;
+END $$;
 
-CREATE TABLE "deals" (
+CREATE TABLE IF NOT EXISTS "deals" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "bannerHeading" TEXT,
@@ -22,4 +26,20 @@ CREATE TABLE "deals" (
     CONSTRAINT "deals_pkey" PRIMARY KEY ("id")
 );
 
-ALTER TABLE "deals" ADD CONSTRAINT "deals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "deals"
+  ADD COLUMN IF NOT EXISTS "user_id" TEXT,
+  ADD COLUMN IF NOT EXISTS "added_by" "DealAddedBy";
+
+UPDATE "deals" SET "added_by" = 'ADMIN' WHERE "added_by" IS NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'deals_user_id_fkey'
+  ) THEN
+    ALTER TABLE "deals"
+      ADD CONSTRAINT "deals_user_id_fkey"
+      FOREIGN KEY ("user_id") REFERENCES "users"("id")
+      ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;

@@ -132,6 +132,7 @@ model ShippingZone {
 model Category {
   id            String        @id @default(uuid())
   name          String        @unique
+  imageUrl      String?
   isActive      Boolean       @default(true)
   subcategories Subcategory[]
   products      Product[]

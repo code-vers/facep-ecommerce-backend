@@ -4,12 +4,14 @@ import { QueryBuilder } from '../../utils/QueryBuilder';
 
 const createCategory = async (payload: {
   name: string;
+  imageUrl?: string | null;
   isActive: boolean;
   subcategories: string[];
 }) => {
   const result = await prisma.category.create({
     data: {
       name: payload.name,
+      imageUrl: payload.imageUrl || null,
       isActive: payload.isActive,
       subcategories: {
         create: payload.subcategories.map((name) => ({ name }))
@@ -56,6 +58,7 @@ const getAllCategories = async (query: Record<string, unknown>) => {
   const mappedData = result.map((cat: CategoryWithSubs) => ({
     id: cat.id,
     name: cat.name,
+    imageUrl: cat.imageUrl,
     subcategories: cat.subcategories,
     products: 0,
     orders: 0,
@@ -79,12 +82,13 @@ const getAllCategories = async (query: Record<string, unknown>) => {
 
 const updateCategory = async (
   id: string,
-  payload: { name?: string; isActive?: boolean; subcategories?: string[] }
+  payload: { name?: string; imageUrl?: string | null; isActive?: boolean; subcategories?: string[] }
 ) => {
   return await prisma.$transaction(async (tx) => {
     // Basic category fields
     const dataToUpdate: Prisma.CategoryUpdateInput = {};
     if (payload.name !== undefined) dataToUpdate.name = payload.name;
+    if (payload.imageUrl !== undefined) dataToUpdate.imageUrl = payload.imageUrl;
     if (payload.isActive !== undefined) dataToUpdate.isActive = payload.isActive;
 
     await tx.category.update({
