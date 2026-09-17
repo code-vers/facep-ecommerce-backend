@@ -532,8 +532,18 @@ const updateProduct = async (vendorId: string, id: string, rawPayload: ProductPa
   });
 };
 
-const updateProductStatus = async (vendorId: string, id: string, isActive: boolean) => {
-  await getVendorProductById(vendorId, id);
+const updateProductStatus = async (
+  userId: string,
+  id: string,
+  isActive: boolean,
+  isAdmin = false
+) => {
+  if (!isAdmin) {
+    await getVendorProductById(userId, id);
+  } else {
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) throw new AppError(404, 'Product not found');
+  }
   return prisma.product.update({ where: { id }, data: { isActive }, include: productInclude });
 };
 

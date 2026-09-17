@@ -125,10 +125,12 @@ const updateProduct: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const updateProductStatus: RequestHandler = catchAsync(async (req, res) => {
+  const isAdmin = req.user?.role === 'ADMIN';
   const result = await ProductService.updateProductStatus(
     req.user!.userId,
     req.params.id as string,
-    req.body.isActive
+    req.body.isActive,
+    isAdmin
   );
   sendResponse(res, {
     statusCode: 200,

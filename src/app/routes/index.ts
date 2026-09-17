@@ -13,6 +13,7 @@ import { DealRoutes } from '../modules/deal/deal.route';
 import { OrderRoutes } from '../modules/order/order.route';
 import { PayoutRoutes } from '../modules/payout/payout.route';
 import { WishlistRoutes } from '../modules/wishlist/wishlist.route';
+import { DashboardRoutes } from '../modules/dashboard/dashboard.routes';
 
 const router = Router();
 
@@ -64,6 +65,10 @@ const moduleRoutes = [
   {
     path: '/wishlist',
     route: WishlistRoutes
+  },
+  {
+    path: '/dashboard',
+    route: DashboardRoutes
   }
 ];
 

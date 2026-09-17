@@ -77,6 +77,29 @@ router.patch(
   validateRequest(UserValidation.updatePlatformSettings),
   UserController.updatePlatformSettings
 );
+
+// Vendor management routes (ADMIN only)
+router.get(
+  '/vendors',
+  auth('ADMIN'),
+  validateRequest(UserValidation.getVendorsQuery),
+  UserController.getVendors
+);
+router.patch(
+  '/vendors/bulk-status',
+  auth('ADMIN'),
+  validateRequest(UserValidation.bulkUpdateVendorStatus),
+  UserController.bulkUpdateVendorStatus
+);
+router.get('/vendors/:id', auth('ADMIN'), UserController.getVendorById);
+router.patch(
+  '/vendors/:id/status',
+  auth('ADMIN'),
+  validateRequest(UserValidation.updateVendorStatus),
+  UserController.updateVendorStatus
+);
+router.delete('/vendors/:id', auth('ADMIN'), UserController.deleteVendor);
+
 router.get('/', auth('ADMIN'), UserController.getAllUsers);
 router.patch('/:id/reactivate', auth('ADMIN'), UserController.reactivateUser);
 router.patch(

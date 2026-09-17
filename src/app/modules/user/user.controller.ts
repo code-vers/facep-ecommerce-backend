@@ -225,6 +225,60 @@ const updatePlatformSettings: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const getVendors: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserService.getVendors(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Vendors retrieved successfully.',
+    meta: result.meta,
+    data: result.data
+  });
+});
+
+const getVendorById: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserService.getVendorById(req.params.id as string);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Vendor retrieved successfully.',
+    data: result
+  });
+});
+
+const updateVendorStatus: RequestHandler = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const result = await UserService.updateVendorStatus(id as string, status);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Vendor status updated successfully.',
+    data: result
+  });
+});
+
+const bulkUpdateVendorStatus: RequestHandler = catchAsync(async (req, res) => {
+  const { ids, status } = req.body;
+  const result = await UserService.bulkUpdateVendorStatus(ids, status);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Vendors status updated successfully.',
+    data: result
+  });
+});
+
+const deleteVendor: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserService.deleteVendor(req.params.id as string);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Vendor suspended successfully.',
+    data: result
+  });
+});
+
 export const UserController = {
   getMe,
   updateMe,
@@ -244,5 +298,10 @@ export const UserController = {
   deletePaymentMethod,
   updatePaymentPreference,
   getPlatformSettings,
-  updatePlatformSettings
+  updatePlatformSettings,
+  getVendors,
+  getVendorById,
+  updateVendorStatus,
+  bulkUpdateVendorStatus,
+  deleteVendor
 };
