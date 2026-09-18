@@ -221,6 +221,185 @@ const getAdminOverview = async (): Promise<IAdminOverviewResponse> => {
   };
 };
 
+const getVendorOverview = async (vendorId: string): Promise<import('./dashboard.interface').IVendorOverviewResponse> => {
+  const currentMonthName = monthNames[new Date().getMonth()];
+
+  const [earnings, totalProducts, vendorProductsForStock, recentEarnings, vendorProducts] =
+    await Promise.all([
+      // Vendor earnings
+      prisma.orderEarning.findMany({
+        where: { vendorId },
+        select: {
+          amount: true,
+          orderId: true,
+          createdAt: true
+        }
+      }),
+      // Total products count
+      prisma.product.count({
+        where: { vendorId }
+      }),
+      // Vendor products for stock check
+      prisma.product.findMany({
+        where: { vendorId },
+        select: {
+          id: true,
+          stockQuantity: true,
+          lowStockAlertQuantity: true,
+          stockStatus: true
+        }
+      }),
+      // Recent orders with earnings
+      prisma.orderEarning.findMany({
+        where: { vendorId },
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              status: true,
+              createdAt: true,
+              items: {
+                select: {
+                  productName: true
+                }
+              }
+            }
+          }
+        }
+      }),
+      // Vendor products catalog
+      prisma.product.findMany({
+        where: { vendorId },
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          thumbnail: true,
+          basePrice: true
+        }
+      })
+    ]);
+
+  // Total sales
+  const totalSales = earnings.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const totalOrders = new Set(earnings.map((e) => e.orderId)).size;
+
+  // Low stock count
+  const lowStockCount = vendorProductsForStock.filter(
+    (p) =>
+      p.stockStatus === 'OUT_OF_STOCK' ||
+      p.stockQuantity <= (p.lowStockAlertQuantity || 10)
+  ).length;
+
+  // Build 5-month timeline for Revenue Overview & Orders Trend
+  const revenueOverview: IRevenueChartPoint[] = [];
+  const ordersTrend: IRevenueChartPoint[] = [];
+  const now = new Date();
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const mName = monthNames[d.getMonth()];
+    const mYear = d.getFullYear();
+
+    const monthEarnings = earnings.filter((e) => {
+      const oDate = new Date(e.createdAt);
+      return oDate.getMonth() === d.getMonth() && oDate.getFullYear() === mYear;
+    });
+
+    const monthRevenue = monthEarnings.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+    const monthOrdersCount = new Set(monthEarnings.map((e) => e.orderId)).size;
+
+    revenueOverview.push({
+      name: mName,
+      value: Math.round(monthRevenue * 100) / 100
+    });
+    ordersTrend.push({
+      name: mName,
+      value: monthOrdersCount
+    });
+  }
+
+  // Format Recent Orders
+  const statusMap: Record<string, string> = {
+    PENDING_PAYMENT: 'Pending',
+    PAID: 'Processing',
+    PROCESSING: 'Processing',
+    SHIPPED: 'Shipped',
+    DELIVERED: 'Delivered',
+    CANCELLED: 'Cancelled'
+  };
+
+  const recentOrders = recentEarnings.map((item) => {
+    const items = item.order.items || [];
+    let productTitle = 'Order Items';
+    if (items.length === 1) {
+      productTitle = items[0].productName;
+    } else if (items.length > 1) {
+      productTitle = `${items[0].productName} +${items.length - 1} more`;
+    }
+
+    return {
+      id: item.order.id,
+      orderNumber: item.order.orderNumber,
+      product: productTitle,
+      date: new Date(item.createdAt).toISOString().split('T')[0],
+      amount: Math.round(Number(item.amount) * 100) / 100,
+      status: statusMap[item.order.status] || 'Processing'
+    };
+  });
+
+  // Calculate Top Selling Products
+  const productIds = vendorProducts.map((p) => p.id);
+  const salesGroup =
+    productIds.length > 0
+      ? await prisma.orderItem.groupBy({
+          by: ['productId'],
+          where: { productId: { in: productIds } },
+          _sum: { quantity: true }
+        })
+      : [];
+
+  const salesMap = new Map<string, number>();
+  salesGroup.forEach((g) => {
+    salesMap.set(g.productId, g._sum.quantity || 0);
+  });
+
+  const topSellingProducts = vendorProducts.map((p) => ({
+    id: p.id,
+    image: p.thumbnail,
+    product: p.name,
+    units: salesMap.get(p.id) || 0,
+    price: Number(p.basePrice)
+  }));
+
+  topSellingProducts.sort((a, b) => b.units - a.units);
+
+  return {
+    metrics: {
+      totalSales: Math.round(totalSales * 100) / 100,
+      totalOrders,
+      totalProducts,
+      storeRating: '4.8',
+      salesGrowth: '10%',
+      ordersGrowth: '10%',
+      productsGrowth: '10%',
+      ratingGrowth: '10%',
+      currentPeriod: currentMonthName
+    },
+    revenueOverview,
+    ordersTrend,
+    recentOrders,
+    topSellingProducts,
+    lowStockAlert: {
+      lowStockCount
+    }
+  };
+};
+
 export const DashboardService = {
-  getAdminOverview
+  getAdminOverview,
+  getVendorOverview
 };

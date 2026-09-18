@@ -3,6 +3,7 @@ import config from './app/config';
 import { logger } from './app/utils/logger';
 import prisma, { pool } from './app/utils/prisma';
 
+// Server entrypoint
 const server = app.listen(config.port);
 
 server.on('listening', () => {
