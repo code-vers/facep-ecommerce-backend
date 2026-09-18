@@ -27,9 +27,10 @@ model User {
   paymentMethods SavedPaymentMethod[]
   wishlists      Wishlist[]
 
-  wallet   VendorWallet?   @relation("VendorWallet")
-  earnings OrderEarning[]  @relation("VendorEarnings")
-  payouts  PayoutRequest[] @relation("VendorPayouts")
+  wallet     VendorWallet?     @relation("VendorWallet")
+  earnings   OrderEarning[]    @relation("VendorEarnings")
+  payouts    PayoutRequest[]   @relation("VendorPayouts")
+  storefront VendorStorefront? @relation("VendorStorefront")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -253,6 +254,7 @@ model Product {
   returnPolicy        String?
   returnTerms         String?                @db.Text
   wishlistItems       Wishlist[]
+  reviews             Review[]
 
   stockQuantity         Int
   stockStatus           StockStatus @default(AVAILABLE)
@@ -455,5 +457,44 @@ model Wishlist {
   @@unique([userId, productId])
   @@index([userId, createdAt])
   @@map("wishlists")
+}
+
+model Review {
+  id             String    @id @default(uuid())
+  userId         String?   @map("user_id")
+  productId      String    @map("product_id")
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating         Int
+  comment        String    @db.Text
+  reviewerName   String    @map("reviewer_name")
+  reviewerAvatar String?   @map("reviewer_avatar")
+  replyText      String?   @map("reply_text") @db.Text
+  replyDate      DateTime? @map("reply_date")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([productId, createdAt])
+  @@map("reviews")
+}
+
+model VendorStorefront {
+  id                  String   @id @default(uuid())
+  vendorId            String   @unique @map("vendor_id")
+  vendor              User     @relation("VendorStorefront", fields: [vendorId], references: [id], onDelete: Cascade)
+  storeName           String?  @map("store_name")
+  storeLogo           String?  @map("store_logo")
+  storeBanner         String?  @map("store_banner")
+  bannerHeadline      String?  @map("banner_headline")
+  bannerSubheadline   String?  @map("banner_subheadline")
+  storeDescription    String?  @map("store_description") @db.Text
+  contactEmail        String?  @map("contact_email")
+  contactPhone        String?  @map("contact_phone")
+  returnPolicy        String?  @map("return_policy") @db.Text
+  shippingPolicy      String?  @map("shipping_policy") @db.Text
+  warrantyInformation String?  @map("warranty_information") @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("vendor_storefronts")
 }
 
