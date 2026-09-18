@@ -254,6 +254,246 @@ const updatePlatformSettings = (payload: IPlatformSettingsPayload) =>
     create: { id: 'platform', ...payload }
   });
 
+const getVendors = async (query: Record<string, unknown>) => {
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.max(1, Number(query.limit) || 10);
+  const skip = (page - 1) * limit;
+  const searchTerm = typeof query.searchTerm === 'string' ? query.searchTerm.trim() : '';
+  const rawStatus = typeof query.status === 'string' ? query.status.toUpperCase() : 'ALL';
+
+  const baseWhere: Prisma.UserWhereInput = {
+    role: 'VENDOR'
+  };
+
+  if (searchTerm) {
+    baseWhere.OR = [
+      { name: { contains: searchTerm, mode: 'insensitive' } },
+      { email: { contains: searchTerm, mode: 'insensitive' } },
+      { contactNumber: { contains: searchTerm, mode: 'insensitive' } }
+    ];
+  }
+
+  if (rawStatus === 'ACTIVE') {
+    baseWhere.isActive = true;
+    baseWhere.deletedAt = null;
+  } else if (rawStatus === 'PENDING') {
+    baseWhere.isActive = false;
+    baseWhere.deletedAt = null;
+  } else if (rawStatus === 'SUSPENDED') {
+    baseWhere.isActive = false;
+    baseWhere.deletedAt = { not: null };
+  }
+
+  const [allCount, pendingCount, activeCount, suspendedCount, vendors, total] = await Promise.all([
+    prisma.user.count({ where: { role: 'VENDOR' } }),
+    prisma.user.count({ where: { role: 'VENDOR', isActive: false, deletedAt: null } }),
+    prisma.user.count({ where: { role: 'VENDOR', isActive: true, deletedAt: null } }),
+    prisma.user.count({ where: { role: 'VENDOR', isActive: false, deletedAt: { not: null } } }),
+    prisma.user.findMany({
+      where: baseWhere,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        contactNumber: true,
+        address: true,
+        avatarUrl: true,
+        isActive: true,
+        deletedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: { products: true }
+        },
+        wallet: {
+          select: {
+            pendingBalance: true,
+            availableBalance: true,
+            totalWithdrawn: true
+          }
+        },
+        earnings: {
+          select: { amount: true }
+        }
+      }
+    }),
+    prisma.user.count({ where: baseWhere })
+  ]);
+
+  const formattedVendors = vendors.map((vendor) => {
+    const totalSales = vendor.earnings.reduce(
+      (sum, e) => sum + Number(e.amount || 0),
+      0
+    );
+
+    let status: 'Active' | 'Pending' | 'Suspend';
+    if (vendor.isActive && !vendor.deletedAt) {
+      status = 'Active';
+    } else if (!vendor.isActive && !vendor.deletedAt) {
+      status = 'Pending';
+    } else {
+      status = 'Suspend';
+    }
+
+    return {
+      id: vendor.id,
+      name: vendor.name,
+      storeName: vendor.name,
+      email: vendor.email,
+      contactNumber: vendor.contactNumber,
+      address: vendor.address,
+      avatarUrl: vendor.avatarUrl,
+      productsCount: vendor._count.products,
+      totalSales,
+      status,
+      isActive: vendor.isActive,
+      deletedAt: vendor.deletedAt,
+      createdAt: vendor.createdAt,
+      updatedAt: vendor.updatedAt,
+      wallet: vendor.wallet
+    };
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+      counts: {
+        all: allCount,
+        pending: pendingCount,
+        active: activeCount,
+        suspended: suspendedCount
+      }
+    },
+    data: formattedVendors
+  };
+};
+
+const getVendorById = async (id: string) => {
+  const vendor = await prisma.user.findFirst({
+    where: { id, role: 'VENDOR' },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      contactNumber: true,
+      address: true,
+      avatarUrl: true,
+      isActive: true,
+      deletedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: {
+        select: { products: true }
+      },
+      wallet: true,
+      earnings: {
+        select: {
+          id: true,
+          amount: true,
+          adminCommission: true,
+          isCleared: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      }
+    }
+  });
+
+  if (!vendor) {
+    throw new AppError(404, 'Vendor not found.');
+  }
+
+  const totalSales = vendor.earnings.reduce(
+    (sum, e) => sum + Number(e.amount || 0),
+    0
+  );
+
+  let status: 'Active' | 'Pending' | 'Suspend';
+  if (vendor.isActive && !vendor.deletedAt) {
+    status = 'Active';
+  } else if (!vendor.isActive && !vendor.deletedAt) {
+    status = 'Pending';
+  } else {
+    status = 'Suspend';
+  }
+
+  return {
+    ...vendor,
+    storeName: vendor.name,
+    totalSales,
+    status
+  };
+};
+
+const updateVendorStatus = async (
+  id: string,
+  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED'
+) => {
+  const vendor = await prisma.user.findFirst({ where: { id, role: 'VENDOR' } });
+  if (!vendor) {
+    throw new AppError(404, 'Vendor not found.');
+  }
+
+  let dataToUpdate: Prisma.UserUpdateInput;
+  if (status === 'ACTIVE') {
+    dataToUpdate = { isActive: true, deletedAt: null };
+  } else if (status === 'PENDING') {
+    dataToUpdate = { isActive: false, deletedAt: null };
+  } else {
+    dataToUpdate = { isActive: false, deletedAt: new Date() };
+  }
+
+  return prisma.user.update({
+    where: { id },
+    data: dataToUpdate,
+    select: publicUserSelect
+  });
+};
+
+const bulkUpdateVendorStatus = async (
+  ids: string[],
+  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED'
+) => {
+  let dataToUpdate: Prisma.UserUpdateManyMutationInput;
+  if (status === 'ACTIVE') {
+    dataToUpdate = { isActive: true, deletedAt: null };
+  } else if (status === 'PENDING') {
+    dataToUpdate = { isActive: false, deletedAt: null };
+  } else {
+    dataToUpdate = { isActive: false, deletedAt: new Date() };
+  }
+
+  return prisma.user.updateMany({
+    where: {
+      id: { in: ids },
+      role: 'VENDOR'
+    },
+    data: dataToUpdate
+  });
+};
+
+const deleteVendor = async (id: string) => {
+  const vendor = await prisma.user.findFirst({ where: { id, role: 'VENDOR' } });
+  if (!vendor) {
+    throw new AppError(404, 'Vendor not found.');
+  }
+
+  return prisma.user.update({
+    where: { id },
+    data: { isActive: false, deletedAt: new Date() },
+    select: publicUserSelect
+  });
+};
+
 export const UserService = {
   getMe,
   updateMe,
@@ -273,5 +513,10 @@ export const UserService = {
   deletePaymentMethod,
   updatePaymentPreference,
   getPlatformSettings,
-  updatePlatformSettings
+  updatePlatformSettings,
+  getVendors,
+  getVendorById,
+  updateVendorStatus,
+  bulkUpdateVendorStatus,
+  deleteVendor
 };

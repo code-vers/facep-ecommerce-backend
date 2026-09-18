@@ -85,6 +85,40 @@ const updatePlatformSettings = z.object({
     .refine((body) => Object.keys(body).length > 0, 'At least one setting is required.')
 });
 
+const updateVendorStatus = z.object({
+  body: z
+    .object({
+      status: z.enum(['ACTIVE', 'PENDING', 'SUSPENDED'], {
+        message: 'Invalid status. Must be ACTIVE, PENDING, or SUSPENDED.'
+      })
+    })
+    .strict()
+});
+
+const bulkUpdateVendorStatus = z.object({
+  body: z
+    .object({
+      ids: z.array(z.string().min(1, 'Vendor ID cannot be empty')).min(1, 'At least one vendor ID is required'),
+      status: z.enum(['ACTIVE', 'PENDING', 'SUSPENDED'], {
+        message: 'Invalid status. Must be ACTIVE, PENDING, or SUSPENDED.'
+      })
+    })
+    .strict()
+});
+
+const getVendorsQuery = z.object({
+  query: z
+    .object({
+      page: z.string().optional(),
+      limit: z.string().optional(),
+      searchTerm: z.string().optional(),
+      status: z.enum(['ALL', 'ACTIVE', 'PENDING', 'SUSPENDED', 'all', 'active', 'pending', 'suspended']).optional(),
+      sortBy: z.string().optional(),
+      sortOrder: z.enum(['asc', 'desc']).optional()
+    })
+    .optional()
+});
+
 export const UserValidation = {
   changeRole,
   updateProfile,
@@ -94,5 +128,8 @@ export const UserValidation = {
   createPaymentMethod,
   updatePaymentMethod,
   updatePaymentPreference,
-  updatePlatformSettings
+  updatePlatformSettings,
+  updateVendorStatus,
+  bulkUpdateVendorStatus,
+  getVendorsQuery
 };

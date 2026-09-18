@@ -29,7 +29,7 @@ router.patch(
 );
 router.patch(
   '/:id/status',
-  auth(Role.VENDOR),
+  auth(Role.VENDOR, Role.ADMIN),
   validateRequest(ProductValidation.updateStatusValidationSchema),
   ProductController.updateProductStatus
 );
