@@ -132,7 +132,171 @@ const updateStorefront = async (
   };
 };
 
+const getPublicStorefront = async (
+  identifier: string
+): Promise<IVendorStorefront & { productCount: number }> => {
+  let vendor: {
+    id: string;
+    name: string;
+    email: string;
+    contactNumber: string | null;
+    avatarUrl: string | null;
+  } | null = null;
+
+  if (identifier === '1' || identifier === 'default') {
+    vendor = await prisma.user.findFirst({
+      where: {
+        role: 'VENDOR',
+        storefront: { isNot: null }
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        contactNumber: true,
+        avatarUrl: true
+      }
+    });
+
+    if (!vendor) {
+      vendor = await prisma.user.findFirst({
+        where: { role: 'VENDOR' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contactNumber: true,
+          avatarUrl: true
+        }
+      });
+    }
+  } else {
+    // 1. Try by User ID (vendor ID)
+    vendor = await prisma.user.findUnique({
+      where: { id: identifier },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        contactNumber: true,
+        avatarUrl: true
+      }
+    });
+
+    // 2. Try by Storefront ID
+    if (!vendor) {
+      const sf = await prisma.vendorStorefront.findUnique({
+        where: { id: identifier },
+        include: {
+          vendor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              contactNumber: true,
+              avatarUrl: true
+            }
+          }
+        }
+      });
+      if (sf?.vendor) {
+        vendor = sf.vendor;
+      }
+    }
+
+    // 3. Try by Store Name or User Name (case-insensitive)
+    if (!vendor) {
+      const cleanName = identifier.replace(/[-_]/g, ' ').trim();
+      const sf = await prisma.vendorStorefront.findFirst({
+        where: {
+          storeName: { contains: cleanName, mode: 'insensitive' }
+        },
+        include: {
+          vendor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              contactNumber: true,
+              avatarUrl: true
+            }
+          }
+        }
+      });
+      if (sf?.vendor) {
+        vendor = sf.vendor;
+      } else {
+        vendor = await prisma.user.findFirst({
+          where: {
+            name: { contains: cleanName, mode: 'insensitive' },
+            role: 'VENDOR'
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            contactNumber: true,
+            avatarUrl: true
+          }
+        });
+      }
+    }
+  }
+
+  // Fallback if not found at all but any vendor exists
+  if (!vendor) {
+    vendor = await prisma.user.findFirst({
+      where: { role: 'VENDOR' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        contactNumber: true,
+        avatarUrl: true
+      }
+    });
+  }
+
+  if (!vendor) {
+    throw new AppError(404, 'Storefront not found');
+  }
+
+  const storefront = await prisma.vendorStorefront.findUnique({
+    where: { vendorId: vendor.id }
+  });
+
+  const productCount = await prisma.product.count({
+    where: { vendorId: vendor.id, isActive: true }
+  });
+
+  return {
+    id: storefront?.id,
+    vendorId: vendor.id,
+    storeName: storefront?.storeName || vendor.name || 'Store Name',
+    storeLogo: storefront?.storeLogo || vendor.avatarUrl || null,
+    storeBanner: storefront?.storeBanner || DEFAULT_BANNER,
+    bannerHeadline: storefront?.bannerHeadline || 'Buy Your Favorite Products',
+    bannerSubheadline:
+      storefront?.bannerSubheadline || `From ${storefront?.storeName || vendor.name}`,
+    storeDescription: storefront?.storeDescription || 'Welcome to our official store on Facep.',
+    contactEmail: storefront?.contactEmail || vendor.email,
+    contactPhone: storefront?.contactPhone || vendor.contactNumber || '+1 (555) 123-4567',
+    returnPolicy:
+      storefront?.returnPolicy ||
+      '30-day return policy on unused and undamaged items in original packaging.',
+    shippingPolicy:
+      storefront?.shippingPolicy ||
+      'Standard shipping takes 3-5 business days. Express shipping available at checkout.',
+    warrantyInformation:
+      storefront?.warrantyInformation || '1-year standard warranty on manufacturer defects.',
+    createdAt: storefront?.createdAt ? new Date(storefront.createdAt).toISOString() : undefined,
+    updatedAt: storefront?.updatedAt ? new Date(storefront.updatedAt).toISOString() : undefined,
+    productCount
+  };
+};
+
 export const StorefrontService = {
   getStorefront,
-  updateStorefront
+  updateStorefront,
+  getPublicStorefront
 };

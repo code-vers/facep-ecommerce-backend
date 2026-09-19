@@ -35,7 +35,21 @@ type Query = Record<string, unknown>;
 const productInclude = {
   category: true,
   subcategory: true,
-  vendor: { select: { id: true, name: true } },
+  vendor: {
+    select: {
+      id: true,
+      name: true,
+      avatarUrl: true,
+      storefront: {
+        select: {
+          id: true,
+          storeName: true,
+          storeLogo: true,
+          storeBanner: true
+        }
+      }
+    }
+  },
   variants: true,
   specifications: true,
   shippingZone: true,

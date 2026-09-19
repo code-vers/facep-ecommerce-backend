@@ -6,5 +6,6 @@ const router = Router();
 
 router.get('/vendor', auth('VENDOR'), StorefrontController.getStorefront);
 router.patch('/vendor', auth('VENDOR'), StorefrontController.updateStorefront);
+router.get('/:vendorId', StorefrontController.getPublicStorefront);
 
 export const StorefrontRoutes = router;
