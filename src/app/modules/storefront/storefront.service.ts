@@ -58,21 +58,23 @@ const updateStorefront = async (
     throw new AppError(404, 'Vendor not found');
   }
 
+  const updateData: Record<string, any> = {};
+  if (payload.storeName !== undefined) updateData.storeName = payload.storeName;
+  if (payload.storeLogo !== undefined) updateData.storeLogo = payload.storeLogo;
+  if (payload.storeBanner !== undefined) updateData.storeBanner = payload.storeBanner;
+  if (payload.bannerHeadline !== undefined) updateData.bannerHeadline = payload.bannerHeadline;
+  if (payload.bannerSubheadline !== undefined) updateData.bannerSubheadline = payload.bannerSubheadline;
+  if (payload.storeDescription !== undefined) updateData.storeDescription = payload.storeDescription;
+  if (payload.contactEmail !== undefined) updateData.contactEmail = payload.contactEmail;
+  if (payload.contactPhone !== undefined) updateData.contactPhone = payload.contactPhone;
+  if (payload.returnPolicy !== undefined) updateData.returnPolicy = payload.returnPolicy;
+  if (payload.shippingPolicy !== undefined) updateData.shippingPolicy = payload.shippingPolicy;
+  if (payload.warrantyInformation !== undefined)
+    updateData.warrantyInformation = payload.warrantyInformation;
+
   const updatedStorefront = await prisma.vendorStorefront.upsert({
     where: { vendorId },
-    update: {
-      storeName: payload.storeName,
-      storeLogo: payload.storeLogo,
-      storeBanner: payload.storeBanner,
-      bannerHeadline: payload.bannerHeadline,
-      bannerSubheadline: payload.bannerSubheadline,
-      storeDescription: payload.storeDescription,
-      contactEmail: payload.contactEmail,
-      contactPhone: payload.contactPhone,
-      returnPolicy: payload.returnPolicy,
-      shippingPolicy: payload.shippingPolicy,
-      warrantyInformation: payload.warrantyInformation
-    },
+    update: updateData,
     create: {
       vendorId,
       storeName: payload.storeName || vendor.name,

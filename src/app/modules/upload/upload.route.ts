@@ -49,9 +49,20 @@ const storage = multer.diskStorage({
 });
 
 // Validate mime types to allow images
-const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const allowedMimeTypes = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  'image/svg+xml'
+]);
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (allowedMimeTypes.has(file.mimetype)) {
+  if (
+    allowedMimeTypes.has(file.mimetype?.toLowerCase()) ||
+    (file.mimetype && file.mimetype.toLowerCase().startsWith('image/'))
+  ) {
     cb(null, true);
   } else {
     cb(new Error('Only image files are allowed!'));
@@ -62,7 +73,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: 15 * 1024 * 1024,
     files: 10
   }
 });
