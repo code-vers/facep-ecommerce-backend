@@ -40,7 +40,42 @@ CREATE DATABASE facep_db;
 CREATE USER million WITH ENCRYPTED PASSWORD 'your_secure_password';
 GRANT ALL PRIVILEGES ON DATABASE facep_db TO million;
 ALTER DATABASE facep_db OWNER TO million;
+
+-- Switch to facep_db to grant schema permissions (crucial for Postgres 15+)
+\c facep_db
+GRANT ALL ON SCHEMA public TO million;
+ALTER SCHEMA public OWNER TO million;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO million;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO million;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO million;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO million;
 \q
+```
+
+**Configure PostgreSQL Client Authentication (`pg_hba.conf`):**
+By default on AlmaLinux, PostgreSQL uses `ident` authentication for local TCP connections (`127.0.0.1`), which blocks password logins from Node.js/Prisma. We must allow password authentication:
+
+Edit `pg_hba.conf` (located at `/var/lib/pgsql/data/pg_hba.conf`):
+```bash
+sudo nano /var/lib/pgsql/data/pg_hba.conf
+```
+Find the IPv4 and IPv6 lines:
+```text
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            ident
+# IPv6 local connections:
+host    all             all             ::1/128                 ident
+```
+Change `ident` to `scram-sha-256` (or `md5`):
+```text
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            scram-sha-256
+# IPv6 local connections:
+host    all             all             ::1/128                 scram-sha-256
+```
+Restart PostgreSQL:
+```bash
+sudo systemctl restart postgresql
 ```
 
 ---
