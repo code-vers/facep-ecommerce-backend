@@ -143,7 +143,20 @@ npx prisma migrate deploy
 npm run build
 ```
 
-**4. Start Backend with PM2:**
+**4. Seed Database & Assets:**
+```bash
+# Ensure the uploads directory exists for category & product seed images
+mkdir -p /home/million/facep-ecommerce/facep-ecommerce-backend/uploads/categories
+cp /home/million/facep-ecommerce/facep-ecommerce-frontend/public/figma/browsing-history/product-*.jpg /home/million/facep-ecommerce/facep-ecommerce-backend/uploads/categories/
+cp /home/million/facep-ecommerce/facep-ecommerce-frontend/public/banner.png /home/million/facep-ecommerce/facep-ecommerce-backend/uploads/categories/
+
+# Run database seeds
+npm run seed:admin
+npm run seed:categories
+npm run seed:products
+```
+
+**5. Start Backend with PM2:**
 ```bash
 pm2 start dist/server.js --name "facep-backend"
 ```
