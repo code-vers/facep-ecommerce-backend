@@ -129,7 +129,7 @@ nano .env.local
 ```
 Point the frontend to your backend API domain:
 ```env
-NEXT_PUBLIC_API_URL=https://api.many-products.many-faces.com
+NEXT_PUBLIC_API_URL=https://api.many-products.many-faces.com/api/v1
 ```
 
 **3. Build the Next.js Application:**
