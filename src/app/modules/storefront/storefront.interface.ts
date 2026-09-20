@@ -14,6 +14,7 @@ export interface IVendorStorefront {
   warrantyInformation: string;
   createdAt?: string;
   updatedAt?: string;
+  productCount?: number;
 }
 
 export interface IUpdateStorefrontPayload {

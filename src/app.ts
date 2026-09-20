@@ -49,6 +49,18 @@ app.use(
   })
 );
 
+app.get('/', (_req: Request, res: Response) => {
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Facep API server is running.',
+    data: {
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    }
+  });
+});
+
 app.get('/health', (_req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,

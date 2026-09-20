@@ -25,7 +25,20 @@ const updateStorefront: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const getPublicStorefront: RequestHandler = catchAsync(async (req, res) => {
+  const vendorId = String(req.params.vendorId);
+  const result = await StorefrontService.getPublicStorefront(vendorId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Storefront details retrieved successfully.',
+    data: result
+  });
+});
+
 export const StorefrontController = {
   getStorefront,
-  updateStorefront
+  updateStorefront,
+  getPublicStorefront
 };

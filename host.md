@@ -40,7 +40,42 @@ CREATE DATABASE facep_db;
 CREATE USER million WITH ENCRYPTED PASSWORD 'your_secure_password';
 GRANT ALL PRIVILEGES ON DATABASE facep_db TO million;
 ALTER DATABASE facep_db OWNER TO million;
+
+-- Switch to facep_db to grant schema permissions (crucial for Postgres 15+)
+\c facep_db
+GRANT ALL ON SCHEMA public TO million;
+ALTER SCHEMA public OWNER TO million;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO million;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO million;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO million;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO million;
 \q
+```
+
+**Configure PostgreSQL Client Authentication (`pg_hba.conf`):**
+By default on AlmaLinux, PostgreSQL uses `ident` authentication for local TCP connections (`127.0.0.1`), which blocks password logins from Node.js/Prisma. We must allow password authentication:
+
+Edit `pg_hba.conf` (located at `/var/lib/pgsql/data/pg_hba.conf`):
+```bash
+sudo nano /var/lib/pgsql/data/pg_hba.conf
+```
+Find the IPv4 and IPv6 lines:
+```text
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            ident
+# IPv6 local connections:
+host    all             all             ::1/128                 ident
+```
+Change `ident` to `scram-sha-256` (or `md5`):
+```text
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            scram-sha-256
+# IPv6 local connections:
+host    all             all             ::1/128                 scram-sha-256
+```
+Restart PostgreSQL:
+```bash
+sudo systemctl restart postgresql
 ```
 
 ---
@@ -108,7 +143,20 @@ npx prisma migrate deploy
 npm run build
 ```
 
-**4. Start Backend with PM2:**
+**4. Seed Database & Assets:**
+```bash
+# Ensure the uploads directory exists for category & product seed images
+mkdir -p /home/million/facep-ecommerce/facep-ecommerce-backend/uploads/categories
+cp /home/million/facep-ecommerce/facep-ecommerce-frontend/public/figma/browsing-history/product-*.jpg /home/million/facep-ecommerce/facep-ecommerce-backend/uploads/categories/
+cp /home/million/facep-ecommerce/facep-ecommerce-frontend/public/banner.png /home/million/facep-ecommerce/facep-ecommerce-backend/uploads/categories/
+
+# Run database seeds
+npm run seed:admin
+npm run seed:categories
+npm run seed:products
+```
+
+**5. Start Backend with PM2:**
 ```bash
 pm2 start dist/server.js --name "facep-backend"
 ```
@@ -129,7 +177,7 @@ nano .env.local
 ```
 Point the frontend to your backend API domain:
 ```env
-NEXT_PUBLIC_API_URL=https://api.many-products.many-faces.com
+NEXT_PUBLIC_API_URL=https://api.many-products.many-faces.com/api/v1
 ```
 
 **3. Build the Next.js Application:**
