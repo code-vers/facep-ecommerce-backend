@@ -180,9 +180,39 @@ const productPromotionBodySchema = z
 
 const updateProductPromotionValidationSchema = z.object({ body: productPromotionBodySchema });
 
+const updateProductEarlyDealValidationSchema = z.object({
+  body: z.object({
+    isEarlyDeal: z.boolean({ message: 'isEarlyDeal is required' })
+  })
+});
+
+const batchUpdateEarlyDealsValidationSchema = z.object({
+  body: z.object({
+    productIds: z.array(z.string().min(1)).min(1, 'At least one product ID must be provided'),
+    isEarlyDeal: z.boolean({ message: 'isEarlyDeal is required' })
+  })
+});
+
+const updateProductSpecialValidationSchema = z.object({
+  body: z.object({
+    isSpecialProduct: z.boolean({ message: 'isSpecialProduct is required' })
+  })
+});
+
+const batchUpdateSpecialProductsValidationSchema = z.object({
+  body: z.object({
+    productIds: z.array(z.string().min(1)).min(1, 'At least one product ID must be provided'),
+    isSpecialProduct: z.boolean({ message: 'isSpecialProduct is required' })
+  })
+});
+
 export const ProductValidation = {
   createProductValidationSchema,
   updateProductValidationSchema,
   updateStatusValidationSchema,
-  updateProductPromotionValidationSchema
+  updateProductPromotionValidationSchema,
+  updateProductEarlyDealValidationSchema,
+  batchUpdateEarlyDealsValidationSchema,
+  updateProductSpecialValidationSchema,
+  batchUpdateSpecialProductsValidationSchema
 };

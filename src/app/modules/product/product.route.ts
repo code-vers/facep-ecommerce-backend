@@ -22,6 +22,30 @@ router.post(
   ProductController.createProduct
 );
 router.patch(
+  '/early-deal/batch',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.batchUpdateEarlyDealsValidationSchema),
+  ProductController.batchUpdateEarlyDeals
+);
+router.patch(
+  '/special-product/batch',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.batchUpdateSpecialProductsValidationSchema),
+  ProductController.batchUpdateSpecialProducts
+);
+router.patch(
+  '/:id/early-deal',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.updateProductEarlyDealValidationSchema),
+  ProductController.updateProductEarlyDeal
+);
+router.patch(
+  '/:id/special-product',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.updateProductSpecialValidationSchema),
+  ProductController.updateProductSpecialStatus
+);
+router.patch(
   '/:id',
   auth(Role.VENDOR),
   validateRequest(ProductValidation.updateProductValidationSchema),

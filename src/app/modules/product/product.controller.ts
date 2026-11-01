@@ -177,6 +177,58 @@ const deleteProduct: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const updateProductEarlyDeal: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.updateProductEarlyDeal(
+    req.params.id as string,
+    req.body.isEarlyDeal
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `Product early deal status updated successfully`,
+    data: result
+  });
+});
+
+const batchUpdateEarlyDeals: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.batchUpdateEarlyDeals(
+    req.body.productIds,
+    req.body.isEarlyDeal
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Early deals updated successfully',
+    data: result
+  });
+});
+
+const updateProductSpecialStatus: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.updateProductSpecialStatus(
+    req.params.id as string,
+    req.body.isSpecialProduct
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Product special status updated successfully',
+    data: result
+  });
+});
+
+const batchUpdateSpecialProducts: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.batchUpdateSpecialProducts(
+    req.body.productIds,
+    req.body.isSpecialProduct
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Special products updated successfully',
+    data: result
+  });
+});
+
 export const ProductController = {
   createProduct,
   getPublicProducts,
@@ -192,5 +244,9 @@ export const ProductController = {
   updateProductStatus,
   updateProductPromotion,
   removeProductPromotion,
-  deleteProduct
+  deleteProduct,
+  updateProductEarlyDeal,
+  batchUpdateEarlyDeals,
+  updateProductSpecialStatus,
+  batchUpdateSpecialProducts
 };

@@ -39,6 +39,7 @@ const productInclude = {
     select: {
       id: true,
       name: true,
+      email: true,
       avatarUrl: true,
       storefront: {
         select: {
@@ -263,6 +264,12 @@ const publicWhere = (query: Query): Prisma.ProductWhereInput => {
   if (Number.isFinite(maxPrice)) conditions.push({ basePrice: { lte: maxPrice } });
   if (String(query.inStock) === 'true') conditions.push({ stockStatus: StockStatus.AVAILABLE });
   if (String(query.hasDiscount) === 'true') conditions.push({ discountValue: { gt: 0 } });
+  if (query.isEarlyDeal !== undefined && query.isEarlyDeal !== '') {
+    conditions.push({ isEarlyDeal: String(query.isEarlyDeal) === 'true' });
+  }
+  if (query.isSpecialProduct !== undefined && query.isSpecialProduct !== '') {
+    conditions.push({ isSpecialProduct: String(query.isSpecialProduct) === 'true' });
+  }
   return { AND: conditions };
 };
 
@@ -403,11 +410,24 @@ const adminWhere = (query: Query): Prisma.ProductWhereInput => {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
-        { brand: { contains: search, mode: 'insensitive' } }
+        { brand: { contains: search, mode: 'insensitive' } },
+        { vendor: { email: { contains: search, mode: 'insensitive' } } },
+        { vendor: { name: { contains: search, mode: 'insensitive' } } }
       ]
     });
   }
+  if (query.vendorEmail) {
+    conditions.push({
+      vendor: { email: { contains: String(query.vendorEmail).trim(), mode: 'insensitive' } }
+    });
+  }
   if (query.categoryId) conditions.push({ categoryId: String(query.categoryId) });
+  if (query.isEarlyDeal !== undefined && query.isEarlyDeal !== '') {
+    conditions.push({ isEarlyDeal: String(query.isEarlyDeal) === 'true' });
+  }
+  if (query.isSpecialProduct !== undefined && query.isSpecialProduct !== '') {
+    conditions.push({ isSpecialProduct: String(query.isSpecialProduct) === 'true' });
+  }
   if (query.status && query.status !== 'All') {
     const status = String(query.status).toLowerCase();
     if (status === 'active') conditions.push({ isActive: true });
@@ -613,6 +633,48 @@ const deleteProduct = async (vendorId: string, id: string) => {
   return prisma.product.delete({ where: { id } });
 };
 
+const updateProductEarlyDeal = async (id: string, isEarlyDeal: boolean) => {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw new AppError(404, 'Product not found');
+  return prisma.product.update({
+    where: { id },
+    data: { isEarlyDeal },
+    include: productInclude
+  });
+};
+
+const batchUpdateEarlyDeals = async (productIds: string[], isEarlyDeal: boolean) => {
+  const result = await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { isEarlyDeal }
+  });
+  return {
+    count: result.count,
+    isEarlyDeal
+  };
+};
+
+const updateProductSpecialStatus = async (id: string, isSpecialProduct: boolean) => {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw new AppError(404, 'Product not found');
+  return prisma.product.update({
+    where: { id },
+    data: { isSpecialProduct },
+    include: productInclude
+  });
+};
+
+const batchUpdateSpecialProducts = async (productIds: string[], isSpecialProduct: boolean) => {
+  const result = await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { isSpecialProduct }
+  });
+  return {
+    count: result.count,
+    isSpecialProduct
+  };
+};
+
 export const ProductService = {
   createProduct,
   getPublicProducts,
@@ -628,5 +690,9 @@ export const ProductService = {
   updateProductStatus,
   updateProductPromotion,
   removeProductPromotion,
-  deleteProduct
+  deleteProduct,
+  updateProductEarlyDeal,
+  batchUpdateEarlyDeals,
+  updateProductSpecialStatus,
+  batchUpdateSpecialProducts
 };
