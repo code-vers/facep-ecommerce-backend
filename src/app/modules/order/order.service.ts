@@ -54,6 +54,8 @@ export const OrderService = {
         vatGst: vatGst,
         importCharges: importCharges,
         handlingFee: handlingFee,
+        couponCode: payload.couponCode ? String(payload.couponCode).trim().toUpperCase() : null,
+        couponDiscount: payload.couponDiscount ? Number(payload.couponDiscount) : 0,
         total: total,
 
         items: {
@@ -114,10 +116,17 @@ export const OrderService = {
       });
     }
 
+    if (payload.couponCode) {
+      await prisma.coupon.updateMany({
+        where: { code: String(payload.couponCode).trim().toUpperCase() },
+        data: { usageCount: { increment: 1 } }
+      });
+    }
+
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
     try {
-      const session = await stripe.checkout.sessions.create({
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
         payment_method_types: ['card'],
         line_items: lineItems,
         mode: 'payment',
@@ -125,7 +134,24 @@ export const OrderService = {
         cancel_url: `${frontendUrl}/checkout/cancel?order=${order.orderNumber}`,
         client_reference_id: order.id,
         customer_email: formData.email
-      });
+      };
+
+      const couponDiscount = Number(payload.couponDiscount) || 0;
+      if (couponDiscount > 0) {
+        try {
+          const stripeCoupon = await stripe.coupons.create({
+            amount_off: Math.round(couponDiscount * 100),
+            currency: 'usd',
+            duration: 'once',
+            name: `Coupon (${payload.couponCode || 'PROMO'})`
+          });
+          sessionParams.discounts = [{ coupon: stripeCoupon.id }];
+        } catch (stripeErr) {
+          console.warn('Could not attach Stripe discount coupon:', stripeErr);
+        }
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
 
       await prisma.order.update({
         where: { id: order.id },
