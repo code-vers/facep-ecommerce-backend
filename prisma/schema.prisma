@@ -362,6 +362,8 @@ model Order {
   vatGst          Decimal     @db.Decimal(10,2)
   importCharges   Decimal     @db.Decimal(10,2)
   handlingFee     Decimal     @db.Decimal(10,2)
+  couponCode      String?     @map("coupon_code")
+  couponDiscount  Decimal?    @default(0) @db.Decimal(10,2) @map("coupon_discount")
   total           Decimal     @db.Decimal(10,2)
 
   paymentMethod   String      @default("STRIPE")
@@ -501,4 +503,49 @@ model VendorStorefront {
 
   @@map("vendor_storefronts")
 }
+
+enum CouponDiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum CouponScope {
+  ALL
+  CATEGORY
+  PRODUCT
+}
+
+model Coupon {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  title             String
+  description       String?            @db.Text
+  discountType      CouponDiscountType @default(PERCENTAGE) @map("discount_type")
+  discountValue     Decimal            @db.Decimal(10, 2) @map("discount_value")
+  maxDiscountAmount Decimal?           @db.Decimal(10, 2) @map("max_discount_amount")
+  minOrderAmount    Decimal            @default(0) @db.Decimal(10, 2) @map("min_order_amount")
+
+  scope             CouponScope        @default(ALL)
+  categoryIds       String[]           @default([]) @map("category_ids")
+  productIds        String[]           @default([]) @map("product_ids")
+
+  usageLimit        Int?               @map("usage_limit")
+  usageCount        Int                @default(0) @map("usage_count")
+  userUsageLimit    Int                @default(1) @map("user_usage_limit")
+
+  startDate         DateTime           @default(now()) @map("start_date")
+  endDate           DateTime           @map("end_date")
+  isActive          Boolean            @default(true) @map("is_active")
+  isPublic          Boolean            @default(true) @map("is_public")
+  badgeText         String?            @map("badge_text")
+
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  @@index([isActive, isPublic, endDate])
+  @@index([code])
+  @@map("coupons")
+}
+
 

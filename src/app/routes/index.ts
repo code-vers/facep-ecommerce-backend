@@ -16,6 +16,7 @@ import { WishlistRoutes } from '../modules/wishlist/wishlist.route';
 import { DashboardRoutes } from '../modules/dashboard/dashboard.routes';
 import { ReviewRoutes } from '../modules/review/review.routes';
 import { StorefrontRoutes } from '../modules/storefront/storefront.routes';
+import { CouponRoutes } from '../modules/coupon/coupon.route';
 
 const router = Router();
 
@@ -79,6 +80,10 @@ const moduleRoutes = [
   {
     path: '/storefront',
     route: StorefrontRoutes
+  },
+  {
+    path: '/coupons',
+    route: CouponRoutes
   }
 ];
 
