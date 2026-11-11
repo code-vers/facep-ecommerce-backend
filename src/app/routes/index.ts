@@ -58,6 +58,10 @@ const moduleRoutes = [
     route: OrderRoutes
   },
   {
+    path: '/orders',
+    route: OrderRoutes
+  },
+  {
     path: '/uploads',
     route: UploadRoutes
   },
