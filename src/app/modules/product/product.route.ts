@@ -34,6 +34,12 @@ router.patch(
   ProductController.batchUpdateSpecialProducts
 );
 router.patch(
+  '/holiday-deal/batch',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.batchUpdateHolidayDealsValidationSchema),
+  ProductController.batchUpdateHolidayDeals
+);
+router.patch(
   '/:id/early-deal',
   auth(Role.ADMIN),
   validateRequest(ProductValidation.updateProductEarlyDealValidationSchema),
@@ -44,6 +50,12 @@ router.patch(
   auth(Role.ADMIN),
   validateRequest(ProductValidation.updateProductSpecialValidationSchema),
   ProductController.updateProductSpecialStatus
+);
+router.patch(
+  '/:id/holiday-deal',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.updateProductHolidayDealValidationSchema),
+  ProductController.updateProductHolidayDealStatus
 );
 router.patch(
   '/:id',

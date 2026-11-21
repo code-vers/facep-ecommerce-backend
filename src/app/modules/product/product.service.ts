@@ -270,6 +270,9 @@ const publicWhere = (query: Query): Prisma.ProductWhereInput => {
   if (query.isSpecialProduct !== undefined && query.isSpecialProduct !== '') {
     conditions.push({ isSpecialProduct: String(query.isSpecialProduct) === 'true' });
   }
+  if (query.isHolidayDeal !== undefined && query.isHolidayDeal !== '') {
+    conditions.push({ isHolidayDeal: String(query.isHolidayDeal) === 'true' });
+  }
   return { AND: conditions };
 };
 
@@ -427,6 +430,9 @@ const adminWhere = (query: Query): Prisma.ProductWhereInput => {
   }
   if (query.isSpecialProduct !== undefined && query.isSpecialProduct !== '') {
     conditions.push({ isSpecialProduct: String(query.isSpecialProduct) === 'true' });
+  }
+  if (query.isHolidayDeal !== undefined && query.isHolidayDeal !== '') {
+    conditions.push({ isHolidayDeal: String(query.isHolidayDeal) === 'true' });
   }
   if (query.status && query.status !== 'All') {
     const status = String(query.status).toLowerCase();
@@ -675,6 +681,27 @@ const batchUpdateSpecialProducts = async (productIds: string[], isSpecialProduct
   };
 };
 
+const updateProductHolidayDealStatus = async (id: string, isHolidayDeal: boolean) => {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw new AppError(404, 'Product not found');
+  return prisma.product.update({
+    where: { id },
+    data: { isHolidayDeal },
+    include: productInclude
+  });
+};
+
+const batchUpdateHolidayDeals = async (productIds: string[], isHolidayDeal: boolean) => {
+  const result = await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { isHolidayDeal }
+  });
+  return {
+    count: result.count,
+    isHolidayDeal
+  };
+};
+
 export const ProductService = {
   createProduct,
   getPublicProducts,
@@ -694,5 +721,7 @@ export const ProductService = {
   updateProductEarlyDeal,
   batchUpdateEarlyDeals,
   updateProductSpecialStatus,
-  batchUpdateSpecialProducts
+  batchUpdateSpecialProducts,
+  updateProductHolidayDealStatus,
+  batchUpdateHolidayDeals
 };

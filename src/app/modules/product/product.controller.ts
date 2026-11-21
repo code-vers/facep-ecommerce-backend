@@ -229,6 +229,32 @@ const batchUpdateSpecialProducts: RequestHandler = catchAsync(async (req, res) =
   });
 });
 
+const updateProductHolidayDealStatus: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.updateProductHolidayDealStatus(
+    req.params.id as string,
+    req.body.isHolidayDeal
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Product holiday deal status updated successfully',
+    data: result
+  });
+});
+
+const batchUpdateHolidayDeals: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.batchUpdateHolidayDeals(
+    req.body.productIds,
+    req.body.isHolidayDeal
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Holiday deals updated successfully',
+    data: result
+  });
+});
+
 export const ProductController = {
   createProduct,
   getPublicProducts,
@@ -248,5 +274,7 @@ export const ProductController = {
   updateProductEarlyDeal,
   batchUpdateEarlyDeals,
   updateProductSpecialStatus,
-  batchUpdateSpecialProducts
+  batchUpdateSpecialProducts,
+  updateProductHolidayDealStatus,
+  batchUpdateHolidayDeals
 };

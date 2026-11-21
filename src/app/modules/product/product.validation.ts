@@ -206,6 +206,19 @@ const batchUpdateSpecialProductsValidationSchema = z.object({
   })
 });
 
+const updateProductHolidayDealValidationSchema = z.object({
+  body: z.object({
+    isHolidayDeal: z.boolean({ message: 'isHolidayDeal is required' })
+  })
+});
+
+const batchUpdateHolidayDealsValidationSchema = z.object({
+  body: z.object({
+    productIds: z.array(z.string().min(1)).min(1, 'At least one product ID must be provided'),
+    isHolidayDeal: z.boolean({ message: 'isHolidayDeal is required' })
+  })
+});
+
 export const ProductValidation = {
   createProductValidationSchema,
   updateProductValidationSchema,
@@ -214,5 +227,7 @@ export const ProductValidation = {
   updateProductEarlyDealValidationSchema,
   batchUpdateEarlyDealsValidationSchema,
   updateProductSpecialValidationSchema,
-  batchUpdateSpecialProductsValidationSchema
+  batchUpdateSpecialProductsValidationSchema,
+  updateProductHolidayDealValidationSchema,
+  batchUpdateHolidayDealsValidationSchema
 };

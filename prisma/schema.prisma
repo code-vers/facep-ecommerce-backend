@@ -207,6 +207,7 @@ model Product {
   publishedAt DateTime @default(now())
   isEarlyDeal Boolean  @default(false)
   isSpecialProduct Boolean @default(false)
+  isHolidayDeal Boolean @default(false)
 
   brand            String?
   productType      String?
@@ -277,6 +278,7 @@ model Product {
   @@index([stockStatus])
   @@index([isEarlyDeal])
   @@index([isSpecialProduct])
+  @@index([isHolidayDeal])
   @@map("products")
 }
 
