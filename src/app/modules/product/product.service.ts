@@ -273,6 +273,12 @@ const publicWhere = (query: Query): Prisma.ProductWhereInput => {
   if (query.isHolidayDeal !== undefined && query.isHolidayDeal !== '') {
     conditions.push({ isHolidayDeal: String(query.isHolidayDeal) === 'true' });
   }
+  if (query.isToysAndGames !== undefined && query.isToysAndGames !== '') {
+    conditions.push({ isToysAndGames: String(query.isToysAndGames) === 'true' });
+  }
+  if (query.isGrocery !== undefined && query.isGrocery !== '') {
+    conditions.push({ isGrocery: String(query.isGrocery) === 'true' });
+  }
   return { AND: conditions };
 };
 
@@ -433,6 +439,12 @@ const adminWhere = (query: Query): Prisma.ProductWhereInput => {
   }
   if (query.isHolidayDeal !== undefined && query.isHolidayDeal !== '') {
     conditions.push({ isHolidayDeal: String(query.isHolidayDeal) === 'true' });
+  }
+  if (query.isToysAndGames !== undefined && query.isToysAndGames !== '') {
+    conditions.push({ isToysAndGames: String(query.isToysAndGames) === 'true' });
+  }
+  if (query.isGrocery !== undefined && query.isGrocery !== '') {
+    conditions.push({ isGrocery: String(query.isGrocery) === 'true' });
   }
   if (query.status && query.status !== 'All') {
     const status = String(query.status).toLowerCase();
@@ -702,6 +714,48 @@ const batchUpdateHolidayDeals = async (productIds: string[], isHolidayDeal: bool
   };
 };
 
+const updateProductToysAndGamesStatus = async (id: string, isToysAndGames: boolean) => {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw new AppError(404, 'Product not found');
+  return prisma.product.update({
+    where: { id },
+    data: { isToysAndGames },
+    include: productInclude
+  });
+};
+
+const batchUpdateToysAndGames = async (productIds: string[], isToysAndGames: boolean) => {
+  const result = await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { isToysAndGames }
+  });
+  return {
+    count: result.count,
+    isToysAndGames
+  };
+};
+
+const updateProductGroceryStatus = async (id: string, isGrocery: boolean) => {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw new AppError(404, 'Product not found');
+  return prisma.product.update({
+    where: { id },
+    data: { isGrocery },
+    include: productInclude
+  });
+};
+
+const batchUpdateGroceries = async (productIds: string[], isGrocery: boolean) => {
+  const result = await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { isGrocery }
+  });
+  return {
+    count: result.count,
+    isGrocery
+  };
+};
+
 export const ProductService = {
   createProduct,
   getPublicProducts,
@@ -723,5 +777,9 @@ export const ProductService = {
   updateProductSpecialStatus,
   batchUpdateSpecialProducts,
   updateProductHolidayDealStatus,
-  batchUpdateHolidayDeals
+  batchUpdateHolidayDeals,
+  updateProductToysAndGamesStatus,
+  batchUpdateToysAndGames,
+  updateProductGroceryStatus,
+  batchUpdateGroceries
 };

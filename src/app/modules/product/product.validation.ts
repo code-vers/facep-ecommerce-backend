@@ -219,6 +219,32 @@ const batchUpdateHolidayDealsValidationSchema = z.object({
   })
 });
 
+const updateProductToysAndGamesValidationSchema = z.object({
+  body: z.object({
+    isToysAndGames: z.boolean({ message: 'isToysAndGames is required' })
+  })
+});
+
+const batchUpdateToysAndGamesValidationSchema = z.object({
+  body: z.object({
+    productIds: z.array(z.string().min(1)).min(1, 'At least one product ID must be provided'),
+    isToysAndGames: z.boolean({ message: 'isToysAndGames is required' })
+  })
+});
+
+const updateProductGroceryValidationSchema = z.object({
+  body: z.object({
+    isGrocery: z.boolean({ message: 'isGrocery is required' })
+  })
+});
+
+const batchUpdateGroceryValidationSchema = z.object({
+  body: z.object({
+    productIds: z.array(z.string().min(1)).min(1, 'At least one product ID must be provided'),
+    isGrocery: z.boolean({ message: 'isGrocery is required' })
+  })
+});
+
 export const ProductValidation = {
   createProductValidationSchema,
   updateProductValidationSchema,
@@ -229,5 +255,9 @@ export const ProductValidation = {
   updateProductSpecialValidationSchema,
   batchUpdateSpecialProductsValidationSchema,
   updateProductHolidayDealValidationSchema,
-  batchUpdateHolidayDealsValidationSchema
+  batchUpdateHolidayDealsValidationSchema,
+  updateProductToysAndGamesValidationSchema,
+  batchUpdateToysAndGamesValidationSchema,
+  updateProductGroceryValidationSchema,
+  batchUpdateGroceryValidationSchema
 };

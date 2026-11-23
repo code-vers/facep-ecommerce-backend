@@ -40,6 +40,24 @@ router.patch(
   ProductController.batchUpdateHolidayDeals
 );
 router.patch(
+  '/toys-and-games/batch',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.batchUpdateToysAndGamesValidationSchema),
+  ProductController.batchUpdateToysAndGames
+);
+router.patch(
+  '/grocery/batch',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.batchUpdateGroceryValidationSchema),
+  ProductController.batchUpdateGroceries
+);
+router.patch(
+  '/groceries/batch',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.batchUpdateGroceryValidationSchema),
+  ProductController.batchUpdateGroceries
+);
+router.patch(
   '/:id/early-deal',
   auth(Role.ADMIN),
   validateRequest(ProductValidation.updateProductEarlyDealValidationSchema),
@@ -56,6 +74,24 @@ router.patch(
   auth(Role.ADMIN),
   validateRequest(ProductValidation.updateProductHolidayDealValidationSchema),
   ProductController.updateProductHolidayDealStatus
+);
+router.patch(
+  '/:id/toys-and-games',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.updateProductToysAndGamesValidationSchema),
+  ProductController.updateProductToysAndGamesStatus
+);
+router.patch(
+  '/:id/grocery',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.updateProductGroceryValidationSchema),
+  ProductController.updateProductGroceryStatus
+);
+router.patch(
+  '/:id/groceries',
+  auth(Role.ADMIN),
+  validateRequest(ProductValidation.updateProductGroceryValidationSchema),
+  ProductController.updateProductGroceryStatus
 );
 router.patch(
   '/:id',

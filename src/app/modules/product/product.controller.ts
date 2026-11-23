@@ -255,6 +255,58 @@ const batchUpdateHolidayDeals: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const updateProductToysAndGamesStatus: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.updateProductToysAndGamesStatus(
+    req.params.id as string,
+    req.body.isToysAndGames
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Toys & games status updated successfully',
+    data: result
+  });
+});
+
+const batchUpdateToysAndGames: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.batchUpdateToysAndGames(
+    req.body.productIds,
+    req.body.isToysAndGames
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Toys & games products updated successfully',
+    data: result
+  });
+});
+
+const updateProductGroceryStatus: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.updateProductGroceryStatus(
+    req.params.id as string,
+    req.body.isGrocery
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Grocery status updated successfully',
+    data: result
+  });
+});
+
+const batchUpdateGroceries: RequestHandler = catchAsync(async (req, res) => {
+  const result = await ProductService.batchUpdateGroceries(
+    req.body.productIds,
+    req.body.isGrocery
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Grocery products updated successfully',
+    data: result
+  });
+});
+
 export const ProductController = {
   createProduct,
   getPublicProducts,
@@ -276,5 +328,9 @@ export const ProductController = {
   updateProductSpecialStatus,
   batchUpdateSpecialProducts,
   updateProductHolidayDealStatus,
-  batchUpdateHolidayDeals
+  batchUpdateHolidayDeals,
+  updateProductToysAndGamesStatus,
+  batchUpdateToysAndGames,
+  updateProductGroceryStatus,
+  batchUpdateGroceries
 };

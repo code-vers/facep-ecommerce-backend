@@ -208,6 +208,8 @@ model Product {
   isEarlyDeal Boolean  @default(false)
   isSpecialProduct Boolean @default(false)
   isHolidayDeal Boolean @default(false)
+  isToysAndGames Boolean @default(false)
+  isGrocery Boolean @default(false)
 
   brand            String?
   productType      String?
@@ -279,6 +281,8 @@ model Product {
   @@index([isEarlyDeal])
   @@index([isSpecialProduct])
   @@index([isHolidayDeal])
+  @@index([isToysAndGames])
+  @@index([isGrocery])
   @@map("products")
 }
 
